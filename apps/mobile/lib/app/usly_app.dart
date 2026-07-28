@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usly/core/theme/usly_theme.dart';
+import 'package:usly/features/auth/presentation/auth_gate.dart';
 import 'package:usly/features/weekly/data/local_weekly_store.dart';
 import 'package:usly/features/weekly/presentation/weekly_ritual_page.dart';
 
 class UslyApp extends StatefulWidget {
-  const UslyApp({required this.preferences, super.key});
+  const UslyApp({
+    required this.preferences,
+    this.client,
+    super.key,
+  });
 
   final SharedPreferences preferences;
+  final SupabaseClient? client;
 
   @override
   State<UslyApp> createState() => _UslyAppState();
@@ -49,10 +56,16 @@ class _UslyAppState extends State<UslyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: WeeklyRitualPage(
-        store: LocalWeeklyStore(widget.preferences),
-        onToggleTheme: _toggleTheme,
-      ),
+      home: widget.client == null
+          ? WeeklyRitualPage(
+              store: LocalWeeklyStore(widget.preferences),
+              onToggleTheme: _toggleTheme,
+            )
+          : AuthGate(
+              client: widget.client!,
+              preferences: widget.preferences,
+              onToggleTheme: _toggleTheme,
+            ),
     );
   }
 }

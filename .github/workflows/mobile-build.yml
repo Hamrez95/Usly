@@ -59,12 +59,14 @@ jobs:
 
       - name: Build APK
         working-directory: apps/mobile
-        run: flutter build apk --release --build-name 0.2.0 --build-number 2
+        run: flutter build apk --release --build-name 0.3.0 --build-number 3
 
       - name: Publish APK
         uses: actions/upload-artifact@v4
         with:
-          name: usly-android-v0.2.0-alpha
-          path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          name: usly-android-v0.3.0-alpha
+          path: |
+            apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+            apps/mobile/pubspec.lock
           if-no-files-found: error
           retention-days: 30
