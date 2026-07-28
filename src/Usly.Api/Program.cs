@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddProblemDetails();
@@ -17,7 +15,7 @@ app.MapGet("/api/status", () => Results.Ok(new
 {
     service = "Usly.Api",
     status = "initial-app",
-    version = "0.1.0"
+    version = "0.1.1"
 }));
 
 app.MapGet("/api/demo", (DemoStore store) => Results.Ok(store.Snapshot()));
@@ -45,19 +43,20 @@ app.MapPost("/api/demo/votes/{partner}", (string partner, VoteRequest request, D
     if (partner is not ("a" or "b"))
         return Results.BadRequest(new { message = "Partner must be 'a' or 'b'." });
 
-    if (request.OptionId is < 1 or > 3 || request.Value is < 0 or > 2)
+    if (request.OptionId is < 1 or > 3 || request.Value is < 1 or > 2)
         return Results.BadRequest(new { message = "Invalid vote." });
 
-    store.SaveVote(partner, request);
+    if (!store.TrySaveVote(partner, request))
+        return Results.Conflict(new { message = "Both weekly responses must be complete before voting." });
+
     return Results.Ok(store.Snapshot());
 });
 
 app.MapPost("/api/demo/select/{optionId:int}", (int optionId, DemoStore store) =>
 {
-    if (optionId is < 1 or > 3)
-        return Results.BadRequest(new { message = "Invalid option." });
+    if (!store.TrySelect(optionId))
+        return Results.Conflict(new { message = "Only a mutual match can be selected." });
 
-    store.Select(optionId);
     return Results.Ok(store.Snapshot());
 });
 
@@ -68,12 +67,7 @@ app.Run();
 
 public partial class Program;
 
-public sealed record WeeklyResponseRequest(
-    int Energy,
-    string Need,
-    string Budget,
-    string Duration,
-    string Setting)
+public sealed record WeeklyResponseRequest(int Energy, string Need, string Budget, string Duration, string Setting)
 {
     public static bool IsValid(WeeklyResponseRequest value) =>
         value.Energy is >= 1 and <= 5 &&
@@ -102,19 +96,26 @@ public sealed class DemoStore
         }
     }
 
-    public void SaveVote(string partner, VoteRequest vote)
+    public bool TrySaveVote(string partner, VoteRequest vote)
     {
         lock (_gate)
         {
+            if (_responses.Count != 2) return false;
             _votes[partner] = vote;
+            _selectedOptionId = null;
+            return true;
         }
     }
 
-    public void Select(int optionId)
+    public bool TrySelect(int optionId)
     {
         lock (_gate)
         {
+            var options = _responses.Count == 2 ? BuildOptions(_responses["a"], _responses["b"]) : [];
+            var match = FindMatch(options);
+            if (match?.Id != optionId) return false;
             _selectedOptionId = optionId;
+            return true;
         }
     }
 
@@ -138,43 +139,25 @@ public sealed class DemoStore
 
             return new
             {
-                responseStatus = new
-                {
-                    a = _responses.ContainsKey("a"),
-                    b = _responses.ContainsKey("b")
-                },
+                responseStatus = new { a = _responses.ContainsKey("a"), b = _responses.ContainsKey("b") },
                 ready,
                 reveal = ready ? BuildReveal(_responses["a"], _responses["b"]) : null,
                 options,
-                voteStatus = new
-                {
-                    a = _votes.ContainsKey("a"),
-                    b = _votes.ContainsKey("b")
-                },
+                voteStatus = new { a = _votes.ContainsKey("a"), b = _votes.ContainsKey("b") },
                 match,
                 selectedOptionId = _selectedOptionId
             };
         }
     }
 
-    private object? FindMatch(List<ExperienceOption> options)
+    private ExperienceOption? FindMatch(List<ExperienceOption> options)
     {
         if (_votes.Count < 2) return null;
-
         var a = _votes["a"];
         var b = _votes["b"];
-        if (a.OptionId == b.OptionId && a.Value > 0 && b.Value > 0)
-            return options.First(x => x.Id == a.OptionId);
-
-        return options
-            .Select(option => new
-            {
-                Option = option,
-                Score = _votes.Values.Where(v => v.OptionId == option.Id).Sum(v => v.Value)
-            })
-            .OrderByDescending(x => x.Score)
-            .ThenBy(x => x.Option.Id)
-            .FirstOrDefault(x => x.Score > 0)?.Option;
+        return a.OptionId == b.OptionId && a.Value > 0 && b.Value > 0
+            ? options.SingleOrDefault(x => x.Id == a.OptionId)
+            : null;
     }
 
     private static object BuildReveal(WeeklyResponseRequest a, WeeklyResponseRequest b)
@@ -182,7 +165,6 @@ public sealed class DemoStore
         var sharedNeed = a.Need == b.Need ? a.Need : "ترکیبی از خواسته‌های هر دو نفر";
         var energy = Math.Min(a.Energy, b.Energy);
         var setting = a.Setting == b.Setting ? a.Setting : "ترکیبی";
-
         return new
         {
             title = a.Need == b.Need ? "این هفته روی یک موج هستید" : "این هفته ترجیح‌های متفاوتی دارید",
@@ -196,7 +178,6 @@ public sealed class DemoStore
         var lowEnergy = Math.Min(a.Energy, b.Energy) <= 2;
         var atHome = a.Setting == "خانه" || b.Setting == "خانه";
         var shortTime = a.Duration == "۳۰ دقیقه" || b.Duration == "۳۰ دقیقه";
-
         return
         [
             new(1, "راحت", lowEnergy || atHome ? "کافه خانگی بدون موبایل" : "قدم‌زدن و نوشیدنی کوتاه", shortTime ? "۳۰ دقیقه" : "۴۵ دقیقه", "کم", "یک نوشیدنی آماده کنید، موبایل‌ها را کنار بگذارید و درباره بهترین بخش هفته حرف بزنید."),
@@ -206,10 +187,4 @@ public sealed class DemoStore
     }
 }
 
-public sealed record ExperienceOption(
-    int Id,
-    string Type,
-    string Title,
-    string Duration,
-    string Budget,
-    string Instructions);
+public sealed record ExperienceOption(int Id, string Type, string Title, string Duration, string Budget, string Instructions);
