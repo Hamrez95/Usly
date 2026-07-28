@@ -8,14 +8,13 @@ class UslyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFF9B5A43);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Usly',
       locale: const Locale('fa'),
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: Brightness.light),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF9B5A43)),
         scaffoldBackgroundColor: const Color(0xFFFFF8F2),
         cardTheme: const CardThemeData(
           color: Colors.white,
@@ -51,14 +50,6 @@ class WeeklyDraft {
     this.duration = '۳۰ دقیقه',
     this.setting = 'خانه',
   });
-
-  Map<String, Object> toJson() => {
-        'energy': energy,
-        'need': need,
-        'budget': budget,
-        'duration': duration,
-        'setting': setting,
-      };
 }
 
 class Experience {
@@ -89,6 +80,7 @@ class _HomePageState extends State<HomePage> {
 
   WeeklyDraft get active => drafts[partner]!;
   bool get ready => submitted.length == 2;
+  String get partnerLabel => partner == 'a' ? 'نفر اول' : 'نفر دوم';
 
   @override
   void initState() {
@@ -98,27 +90,30 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      partner = prefs.getString('partner') ?? 'a';
-      for (final key in ['a', 'b']) {
-        final d = drafts[key]!;
-        d.energy = prefs.getInt('$key.energy') ?? 3;
-        d.need = prefs.getString('$key.need') ?? 'آرامش';
-        d.budget = prefs.getString('$key.budget') ?? 'رایگان';
-        d.duration = prefs.getString('$key.duration') ?? '۳۰ دقیقه';
-        d.setting = prefs.getString('$key.setting') ?? 'خانه';
-        if (prefs.getBool('$key.submitted') ?? false) submitted.add(key);
-        final vote = prefs.getInt('$key.vote');
-        if (vote != null) votes[key] = vote;
-      }
-      selectedId = prefs.getInt('selectedId');
-      loading = false;
-    });
+    for (final key in ['a', 'b']) {
+      final d = drafts[key]!;
+      d.energy = prefs.getInt('$key.energy') ?? 3;
+      d.need = prefs.getString('$key.need') ?? 'آرامش';
+      d.budget = prefs.getString('$key.budget') ?? 'رایگان';
+      d.duration = prefs.getString('$key.duration') ?? '۳۰ دقیقه';
+      d.setting = prefs.getString('$key.setting') ?? 'خانه';
+      if (prefs.getBool('$key.submitted') ?? false) submitted.add(key);
+      final vote = prefs.getInt('$key.vote');
+      if (vote != null) votes[key] = vote;
+    }
+    selectedId = prefs.getInt('selectedId');
+    partner = !submitted.contains('a')
+        ? 'a'
+        : !submitted.contains('b')
+            ? 'b'
+            : !votes.containsKey('a')
+                ? 'a'
+                : 'b';
+    setState(() => loading = false);
   }
 
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('partner', partner);
     for (final key in ['a', 'b']) {
       final d = drafts[key]!;
       await prefs.setInt('$key.energy', d.energy);
@@ -127,16 +122,17 @@ class _HomePageState extends State<HomePage> {
       await prefs.setString('$key.duration', d.duration);
       await prefs.setString('$key.setting', d.setting);
       await prefs.setBool('$key.submitted', submitted.contains(key));
-      if (votes[key] case final int vote) {
-        await prefs.setInt('$key.vote', vote);
-      } else {
+      final vote = votes[key];
+      if (vote == null) {
         await prefs.remove('$key.vote');
+      } else {
+        await prefs.setInt('$key.vote', vote);
       }
     }
-    if (selectedId case final int id) {
-      await prefs.setInt('selectedId', id);
-    } else {
+    if (selectedId == null) {
       await prefs.remove('selectedId');
+    } else {
+      await prefs.setInt('selectedId', selectedId!);
     }
   }
 
@@ -147,37 +143,67 @@ class _HomePageState extends State<HomePage> {
     final lowEnergy = a.energy <= 2 || b.energy <= 2;
     final atHome = a.setting == 'خانه' || b.setting == 'خانه';
     final short = a.duration == '۳۰ دقیقه' || b.duration == '۳۰ دقیقه';
+    final free = a.budget == 'رایگان' || b.budget == 'رایگان';
+
+    if (free) {
+      return [
+        Experience(1, 'راحت', 'نوشیدنی خانگی بدون موبایل', short ? '۳۰ دقیقه' : '۴۵ دقیقه', 'رایگان', 'با چیزهایی که در خانه دارید یک نوشیدنی آماده کنید و درباره بهترین بخش هفته حرف بزنید.'),
+        const Experience(2, 'متعادل', 'قدم‌زدن در محله با یک سؤال تازه', '۴۵ تا ۶۰ دقیقه', 'رایگان', 'یک مسیر نزدیک را انتخاب کنید و هر نفر یک سؤال تازه و سبک از دیگری بپرسد.'),
+        Experience(3, 'متفاوت', lowEnergy ? 'بازی کشف خاطره در خانه' : 'قرار با انتخاب تصادفی مسیر', '۶۰ دقیقه', 'رایگان', 'سه انتخاب کوچک را به شانس بسپارید: مسیر، آهنگ و موضوع گفت‌وگو. هیچ خریدی لازم نیست.'),
+      ];
+    }
+
     return [
       Experience(1, 'راحت', lowEnergy || atHome ? 'کافه خانگی بدون موبایل' : 'قدم‌زدن و نوشیدنی کوتاه', short ? '۳۰ دقیقه' : '۴۵ دقیقه', 'کم', 'یک نوشیدنی آماده کنید، موبایل‌ها را کنار بگذارید و درباره بهترین بخش هفته حرف بزنید.'),
-      Experience(2, 'متعادل', atHome ? 'شام مشترک با پلی‌لیست دونفره' : 'قرار سبک در یک کافه آرام', '۶۰ تا ۹۰ دقیقه', a.budget == 'رایگان' || b.budget == 'رایگان' ? 'کم' : 'متوسط', 'هر نفر سه آهنگ انتخاب کند و در طول برنامه یک سؤال تازه از دیگری بپرسد.'),
+      Experience(2, 'متعادل', atHome ? 'شام مشترک با پلی‌لیست دونفره' : 'قرار سبک در یک کافه آرام', '۶۰ تا ۹۰ دقیقه', 'متوسط', 'هر نفر سه آهنگ انتخاب کند و در طول برنامه یک سؤال تازه از دیگری بپرسد.'),
       Experience(3, 'متفاوت', lowEnergy ? 'بازی کشف خاطره در خانه' : 'قرار با انتخاب تصادفی مسیر', '۹۰ دقیقه', 'متوسط', 'سه انتخاب کوچک را به شانس بسپارید: مسیر، خوراکی و یک فعالیت کوتاه. هدف، تازگی بدون فشار است.'),
     ];
   }
 
   Experience? get match {
     if (votes.length != 2 || votes['a'] != votes['b']) return null;
-    return options.where((x) => x.id == votes['a']).firstOrNull;
+    for (final option in options) {
+      if (option.id == votes['a']) return option;
+    }
+    return null;
+  }
+
+  Future<void> _handoff(String label) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('تحویل گوشی'),
+        content: Text('گوشی را به $label بدهید. پاسخ و رأی قبلی دیگر قابل مشاهده نیست.'),
+        actions: [FilledButton(onPressed: () => Navigator.pop(context), child: Text('من $label هستم'))],
+      ),
+    );
   }
 
   Future<void> _submit() async {
+    if (submitted.contains(partner)) return;
+    final wasA = partner == 'a';
     setState(() {
       submitted.add(partner);
       votes.clear();
       selectedId = null;
-      if (!ready) partner = partner == 'a' ? 'b' : 'a';
+      partner = ready ? 'a' : (wasA ? 'b' : 'a');
     });
     await _persist();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ready ? 'پیشنهادهای مشترک آماده شد.' : 'پاسخ خصوصی ثبت شد؛ حالا نوبت نفر دوم است.')));
+    await _handoff(ready ? 'نفر اول برای رأی‌دادن' : partnerLabel);
   }
 
   Future<void> _vote(int id) async {
+    if (!ready || votes.containsKey(partner)) return;
+    final wasA = partner == 'a';
     setState(() {
       votes[partner] = id;
       selectedId = null;
-      partner = partner == 'a' ? 'b' : 'a';
+      if (votes.length < 2) partner = wasA ? 'b' : 'a';
     });
     await _persist();
+    if (votes.length < 2) await _handoff(partnerLabel);
   }
 
   Future<void> _reset() async {
@@ -216,9 +242,13 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 18),
               _revealCard(),
               const SizedBox(height: 18),
-              const Text('سه پیشنهاد برای شما', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
+              Text(votes.length < 2 ? 'نوبت رأی $partnerLabel' : 'نتیجه رأی دونفره', style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
               const SizedBox(height: 10),
               ...options.map(_experienceCard),
+            ],
+            if (ready && votes.length == 2 && matched == null) ...[
+              const SizedBox(height: 12),
+              const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('هنوز انتخاب مشترکی ندارید. برای حفظ حریم خصوصی رأی‌ها نمایش داده نمی‌شوند؛ از «شروع دوباره» استفاده کنید.'))),
             ],
             if (matched != null) ...[
               const SizedBox(height: 18),
@@ -244,18 +274,27 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _syncCard() {
+    if (ready) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('پاسخ‌های هفتگی ثبت و قفل شدند ✓', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+            SizedBox(height: 8),
+            Text('برای جلوگیری از دیدن پاسخ نفر مقابل، فرم‌ها پس از ثبت هر دو نفر دوباره نمایش داده نمی‌شوند.'),
+          ]),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('حال این هفته', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 14),
-          SegmentedButton<String>(
-            segments: const [ButtonSegment(value: 'a', label: Text('نفر اول')), ButtonSegment(value: 'b', label: Text('نفر دوم'))],
-            selected: {partner},
-            onSelectionChanged: (value) => setState(() => partner = value.first),
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
+          Chip(label: Text('پاسخ خصوصی $partnerLabel')),
+          const SizedBox(height: 10),
           const Text('سطح انرژی', style: TextStyle(fontWeight: FontWeight.w800)),
           Slider(value: active.energy.toDouble(), min: 1, max: 5, divisions: 4, label: '${active.energy}', onChanged: (value) => setState(() => active.energy = value.round())),
           _dropdown('نیاز اصلی', active.need, ['آرامش', 'تفریح', 'گفت‌وگو', 'تجربه جدید', 'حمایت', 'خنده و بازی'], (value) => setState(() => active.need = value)),
@@ -263,9 +302,9 @@ class _HomePageState extends State<HomePage> {
           _dropdown('زمان', active.duration, ['۳۰ دقیقه', '۶۰ دقیقه', '۹۰ دقیقه'], (value) => setState(() => active.duration = value)),
           _dropdown('فضا', active.setting, ['خانه', 'بیرون', 'فرقی ندارد'], (value) => setState(() => active.setting = value)),
           const SizedBox(height: 12),
-          FilledButton(onPressed: _submit, child: Text(submitted.contains(partner) ? 'به‌روزرسانی پاسخ خصوصی' : 'ثبت خصوصی پاسخ')),
+          FilledButton(onPressed: _submit, child: const Text('ثبت و قفل پاسخ خصوصی')),
           const SizedBox(height: 8),
-          Text('پاسخ نفر مقابل نمایش داده نمی‌شود. ${submitted.contains('a') ? 'نفر اول ✓' : 'نفر اول منتظر'} · ${submitted.contains('b') ? 'نفر دوم ✓' : 'نفر دوم منتظر'}', style: TextStyle(color: Colors.brown.shade500, fontSize: 12)),
+          Text('${submitted.contains('a') ? 'نفر اول ✓' : 'نفر اول منتظر'} · ${submitted.contains('b') ? 'نفر دوم ✓' : 'نفر دوم منتظر'}', style: TextStyle(color: Colors.brown.shade500, fontSize: 12)),
         ]),
       ),
     );
@@ -274,7 +313,7 @@ class _HomePageState extends State<HomePage> {
   Widget _dropdown(String label, String value, List<String> values, ValueChanged<String> onChanged) => Padding(
         padding: const EdgeInsets.only(top: 12),
         child: DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
           items: values.map((x) => DropdownMenuItem(value: x, child: Text(x))).toList(),
           onChanged: (x) { if (x != null) onChanged(x); },
@@ -282,16 +321,14 @@ class _HomePageState extends State<HomePage> {
       );
 
   Widget _revealCard() {
-    final a = drafts['a']!;
-    final b = drafts['b']!;
-    final same = a.need == b.need;
+    final same = drafts['a']!.need == drafts['b']!.need;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(same ? 'این هفته روی یک موج هستید' : 'این هفته ترجیح‌های متفاوتی دارید', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
-          Text('پیشنهادها با انرژی قابل‌مدیریت، محدودیت زمانی و بودجه هر دو نفر ساخته شدند.'),
+          const Text('پیشنهادها با انرژی، زمان و محدودیت بودجه هر دو نفر ساخته شدند.'),
           const SizedBox(height: 10),
           const DecoratedBox(decoration: BoxDecoration(color: Color(0xFFF7EDE6), borderRadius: BorderRadius.all(Radius.circular(14))), child: Padding(padding: EdgeInsets.all(12), child: Text('پاسخ‌های خصوصی نمایش داده نمی‌شوند؛ فقط زمینه مشترک استفاده شده است.'))),
         ]),
@@ -299,25 +336,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _experienceCard(Experience e) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Chip(label: Text(e.type)),
-              Text(e.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-              Text('${e.duration} · بودجه ${e.budget}', style: TextStyle(color: Colors.brown.shade500)),
-              const SizedBox(height: 8),
-              Text(e.instructions),
+  Widget _experienceCard(Experience e) {
+    final canVote = votes.length < 2 && !votes.containsKey(partner);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Chip(label: Text(e.type)),
+            Text(e.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+            Text('${e.duration} · بودجه ${e.budget}', style: TextStyle(color: Colors.brown.shade500)),
+            const SizedBox(height: 8),
+            Text(e.instructions),
+            if (canVote) ...[
               const SizedBox(height: 12),
-              OutlinedButton.icon(onPressed: () => _vote(e.id), icon: Icon(votes[partner] == e.id ? Icons.check_circle : Icons.favorite_border), label: Text('رأی ${partner == 'a' ? 'نفر اول' : 'نفر دوم'}')),
-            ]),
-          ),
+              OutlinedButton.icon(onPressed: () => _vote(e.id), icon: const Icon(Icons.favorite_border), label: Text('انتخاب خصوصی $partnerLabel')),
+            ],
+          ]),
         ),
-      );
-}
-
-extension FirstOrNull<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
+      ),
+    );
+  }
 }
