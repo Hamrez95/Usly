@@ -1,10 +1,22 @@
-const state={partner:'a',energy:3,snapshot:null};
+const defaultDraft=()=>({energy:3,need:'',budget:'رایگان',duration:'۳۰ دقیقه',setting:'خانه'});
+const state={partner:'a',drafts:{a:defaultDraft(),b:defaultDraft()},snapshot:null};
 const $=id=>document.getElementById(id);
 const energyLabels=['خیلی کم','کم','متوسط','خوب','زیاد'];
+const activeDraft=()=>state.drafts[state.partner];
+
+function syncFormFromDraft(){
+  const draft=activeDraft();
+  $('need').value=draft.need;
+  $('budget').value=draft.budget;
+  $('duration').value=draft.duration;
+  $('setting').value=draft.setting;
+  renderEnergy();
+}
 
 function renderEnergy(){
-  $('energy-options').innerHTML=energyLabels.map((label,index)=>`<button type="button" class="energy ${state.energy===index+1?'active':''}" data-energy="${index+1}" title="${label}">${['😴','😮‍💨','🙂','😊','⚡'][index]}</button>`).join('');
-  document.querySelectorAll('.energy').forEach(button=>button.onclick=()=>{state.energy=Number(button.dataset.energy);renderEnergy();});
+  const energy=activeDraft().energy;
+  $('energy-options').innerHTML=energyLabels.map((label,index)=>`<button type="button" class="energy ${energy===index+1?'active':''}" data-energy="${index+1}" title="${label}">${['😴','😮‍💨','🙂','😊','⚡'][index]}</button>`).join('');
+  document.querySelectorAll('.energy').forEach(button=>button.onclick=()=>{activeDraft().energy=Number(button.dataset.energy);renderEnergy();});
 }
 
 async function api(path,options={}){
@@ -29,15 +41,12 @@ function render(){
       <article class="option">
         <div class="option-head"><div><span class="badge">${option.type}</span><h2>${option.title}</h2></div><span class="meta">${option.duration} · بودجه ${option.budget}</span></div>
         <p>${option.instructions}</p>
-        <div class="vote-area">
-          <button data-vote="${option.id}:2">انتخاب اول</button>
-          <button data-vote="${option.id}:1">قابل قبول</button>
-        </div>
+        <div class="vote-area"><button data-vote="${option.id}:2">انتخاب اول</button><button data-vote="${option.id}:1">قابل قبول</button></div>
       </article>`).join('');
     document.querySelectorAll('[data-vote]').forEach(button=>button.onclick=async()=>{
       const [optionId,value]=button.dataset.vote.split(':').map(Number);
       state.snapshot=await api(`/api/demo/votes/${state.partner}`,{method:'POST',body:JSON.stringify({optionId,value})});
-      alert(`رأی ${state.partner==='a'?'نفر اول':'نفر دوم'} ثبت شد. حالا تب نفر دیگر را انتخاب کنید.`);
+      alert(`رأی ${state.partner==='a'?'نفر اول':'نفر دوم'} ثبت شد.`);
       render();
     });
   }
@@ -51,27 +60,33 @@ function render(){
   }
 }
 
-document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>{
-  state.partner=tab.dataset.partner;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));
-});
+function switchPartner(partner){
+  state.partner=partner;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.partner===partner));
+  syncFormFromDraft();
+}
+
+document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>switchPartner(tab.dataset.partner));
+['need','budget','duration','setting'].forEach(id=>$(id).addEventListener('change',event=>{activeDraft()[id]=event.target.value;}));
 
 $('sync-form').onsubmit=async event=>{
   event.preventDefault();
   try{
-    state.snapshot=await api(`/api/demo/responses/${state.partner}`,{method:'PUT',body:JSON.stringify({
-      energy:state.energy,need:$('need').value,budget:$('budget').value,duration:$('duration').value,setting:$('setting').value
-    })});
+    const draft=activeDraft();
+    state.snapshot=await api(`/api/demo/responses/${state.partner}`,{method:'PUT',body:JSON.stringify(draft)});
     render();
     if(!state.snapshot.ready){
-      const next=state.partner==='a'?'b':'a';
-      document.querySelector(`[data-partner="${next}"]`).click();
-      $('need').value='';
+      switchPartner(state.partner==='a'?'b':'a');
     } else $('reveal-card').scrollIntoView({behavior:'smooth'});
   }catch(error){alert(error.message);}
 };
 
-$('reset-button').onclick=async()=>{await api('/api/demo/reset',{method:'POST'});state.partner='a';document.querySelector('[data-partner="a"]').click();state.energy=3;renderEnergy();await load();};
+$('reset-button').onclick=async()=>{
+  await api('/api/demo/reset',{method:'POST'});
+  state.drafts={a:defaultDraft(),b:defaultDraft()};
+  switchPartner('a');
+  await load();
+};
 
-renderEnergy();
+syncFormFromDraft();
 load().catch(error=>alert(error.message));
