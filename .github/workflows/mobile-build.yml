@@ -1,0 +1,65 @@
+name: Mobile APK
+
+on:
+  push:
+    branches:
+      - feature/mobile-v0.1
+      - dev
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-build.yml'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Generate Android runner
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --org com.usly.app --project-name usly .
+
+      - name: Install packages
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: apps/mobile
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Test
+        working-directory: apps/mobile
+        run: flutter test
+
+      - name: Build APK
+        working-directory: apps/mobile
+        run: flutter build apk --release --build-name 0.1.0 --build-number 1
+
+      - name: Publish APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: usly-android-v0.1.0
+          path: apps/mobile/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
