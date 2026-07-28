@@ -1,0 +1,16 @@
+name: usly
+version: 0.1.0+1
+publish_to: none
+description: Usly initial offline couple experience app.
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.5.3
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+flutter:
+  uses-material-design: true
