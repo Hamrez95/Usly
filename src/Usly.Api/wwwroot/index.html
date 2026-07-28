@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fff8f2" />
+  <title>Usly — کمتر در اپ؛ بیشتر باهم</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand">Usly</div>
+      <p class="eyebrow">هماهنگی هفتگی دونفره</p>
+      <h1>کمتر در اپ؛<br />بیشتر باهم.</h1>
+      <p class="lead">حال، زمان و بودجه‌تان را هماهنگ کنید و در چند دقیقه به یک برنامه واقعی برسید.</p>
+    </header>
+
+    <section class="card" id="sync-card">
+      <div class="section-head">
+        <div>
+          <span class="step">۱</span>
+          <h2>حال این هفته</h2>
+        </div>
+        <button class="ghost" id="reset-button">شروع دوباره</button>
+      </div>
+
+      <div class="partner-tabs" role="tablist">
+        <button class="tab active" data-partner="a">نفر اول</button>
+        <button class="tab" data-partner="b">نفر دوم</button>
+      </div>
+
+      <form id="sync-form">
+        <label>سطح انرژی</label>
+        <div class="energy-grid" id="energy-options"></div>
+
+        <label for="need">نیاز اصلی این هفته</label>
+        <select id="need" required>
+          <option value="">انتخاب کنید</option>
+          <option>آرامش</option><option>تفریح</option><option>گفت‌وگو</option>
+          <option>تجربه جدید</option><option>حمایت</option><option>خنده و بازی</option>
+        </select>
+
+        <div class="two-columns">
+          <div><label for="budget">بودجه</label><select id="budget" required><option>رایگان</option><option>کم</option><option>متوسط</option></select></div>
+          <div><label for="duration">زمان</label><select id="duration" required><option>۳۰ دقیقه</option><option>۶۰ دقیقه</option><option>۹۰ دقیقه</option></select></div>
+        </div>
+
+        <label for="setting">فضا</label>
+        <select id="setting" required><option>خانه</option><option>بیرون</option><option>فرقی ندارد</option></select>
+
+        <button class="primary" type="submit">ثبت خصوصی پاسخ</button>
+        <p class="privacy-note">پاسخ شما برای نفر مقابل نمایش داده نمی‌شود.</p>
+      </form>
+      <div class="status-row"><span id="status-a">نفر اول: منتظر پاسخ</span><span id="status-b">نفر دوم: منتظر پاسخ</span></div>
+    </section>
+
+    <section class="card hidden" id="reveal-card">
+      <span class="step">۲</span>
+      <h2 id="reveal-title"></h2>
+      <p id="reveal-summary" class="lead compact"></p>
+      <div class="privacy-box" id="reveal-note"></div>
+    </section>
+
+    <section class="hidden" id="options-section">
+      <div class="section-title"><span class="step">۳</span><h2>سه پیشنهاد برای شما</h2></div>
+      <div id="options" class="options"></div>
+    </section>
+
+    <section class="card hidden" id="result-card">
+      <span class="step">۴</span>
+      <h2>انتخاب مشترک</h2>
+      <div id="match-result"></div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
