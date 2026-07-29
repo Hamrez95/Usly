@@ -83,26 +83,26 @@ abstract final class UslyMotion {
 
 abstract final class UslyTheme {
   static ThemeData light() => _build(
-    brightness: Brightness.light,
-    canvas: UslyColors.canvasLight,
-    surface: UslyColors.surfaceLight,
-    ink: UslyColors.inkLight,
-    primary: UslyColors.tealLight,
-    secondary: UslyColors.saffronLight,
-    coral: UslyColors.coralLight,
-    privacy: UslyColors.privacyLight,
-  );
+        brightness: Brightness.light,
+        canvas: UslyColors.canvasLight,
+        surface: UslyColors.surfaceLight,
+        ink: UslyColors.inkLight,
+        primary: UslyColors.tealLight,
+        secondary: UslyColors.saffronLight,
+        coral: UslyColors.coralLight,
+        privacy: UslyColors.privacyLight,
+      );
 
   static ThemeData dark() => _build(
-    brightness: Brightness.dark,
-    canvas: UslyColors.canvasDark,
-    surface: UslyColors.surfaceDark,
-    ink: UslyColors.inkDark,
-    primary: UslyColors.tealDark,
-    secondary: UslyColors.saffronDark,
-    coral: UslyColors.coralDark,
-    privacy: UslyColors.privacyDark,
-  );
+        brightness: Brightness.dark,
+        canvas: UslyColors.canvasDark,
+        surface: UslyColors.surfaceDark,
+        ink: UslyColors.inkDark,
+        primary: UslyColors.tealDark,
+        secondary: UslyColors.saffronDark,
+        coral: UslyColors.coralDark,
+        privacy: UslyColors.privacyDark,
+      );
 
   static ThemeData _build({
     required Brightness brightness,
@@ -117,15 +117,13 @@ abstract final class UslyTheme {
     final scheme = ColorScheme(
       brightness: brightness,
       primary: primary,
-      onPrimary: brightness == Brightness.dark
-          ? UslyColors.inkLight
-          : Colors.white,
+      onPrimary:
+          brightness == Brightness.dark ? UslyColors.inkLight : Colors.white,
       secondary: secondary,
       onSecondary: UslyColors.inkLight,
       tertiary: coral,
-      onTertiary: brightness == Brightness.dark
-          ? UslyColors.inkLight
-          : Colors.white,
+      onTertiary:
+          brightness == Brightness.dark ? UslyColors.inkLight : Colors.white,
       error: brightness == Brightness.dark
           ? const Color(0xFFFFB4AB)
           : const Color(0xFFB3261E),

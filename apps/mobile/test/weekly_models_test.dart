@@ -42,15 +42,15 @@ void main() {
 
   test('match is true only after two identical private votes', () {
     WeeklySnapshot build(Map<int, int> votes) => WeeklySnapshot(
-      drafts: const [WeeklyDraft(), WeeklyDraft()],
-      submitted: const {0, 1},
-      votes: votes,
-      partner: 0,
-      questionIndex: 0,
-      revealSeen: true,
-      variation: 0,
-      selectedId: null,
-    );
+          drafts: const [WeeklyDraft(), WeeklyDraft()],
+          submitted: const {0, 1},
+          votes: votes,
+          partner: 0,
+          questionIndex: 0,
+          revealSeen: true,
+          variation: 0,
+          selectedId: null,
+        );
 
     expect(build({0: 1}).hasMatch, isFalse);
     expect(build({0: 1, 1: 2}).hasMatch, isFalse);

@@ -38,12 +38,12 @@ class WeeklyDraft {
   }
 
   Map<String, Object> toJson() => {
-    'energy': energy,
-    'need': need.name,
-    'budget': budget.name,
-    'duration': duration.name,
-    'setting': setting.name,
-  };
+        'energy': energy,
+        'need': need.name,
+        'budget': budget.name,
+        'duration': duration.name,
+        'setting': setting.name,
+      };
 
   factory WeeklyDraft.fromJson(Map<String, dynamic> json) {
     return WeeklyDraft(
@@ -93,15 +93,15 @@ class WeeklySnapshot {
   });
 
   factory WeeklySnapshot.initial() => const WeeklySnapshot(
-    drafts: [WeeklyDraft(), WeeklyDraft()],
-    submitted: <int>{},
-    votes: <int, int>{},
-    partner: 0,
-    questionIndex: 0,
-    revealSeen: false,
-    variation: 0,
-    selectedId: null,
-  );
+        drafts: [WeeklyDraft(), WeeklyDraft()],
+        submitted: <int>{},
+        votes: <int, int>{},
+        partner: 0,
+        questionIndex: 0,
+        revealSeen: false,
+        variation: 0,
+        selectedId: null,
+      );
 
   final List<WeeklyDraft> drafts;
   final Set<int> submitted;
@@ -125,8 +125,7 @@ List<Experience> recommend(WeeklySnapshot state) {
       first.budget == BudgetBand.free || second.budget == BudgetBand.free;
   final atHome =
       first.setting == SettingBand.home || second.setting == SettingBand.home;
-  final needsTalk =
-      first.need == WeeklyNeed.conversation ||
+  final needsTalk = first.need == WeeklyNeed.conversation ||
       second.need == WeeklyNeed.conversation;
   final wantsPlay =
       first.need == WeeklyNeed.play || second.need == WeeklyNeed.play;

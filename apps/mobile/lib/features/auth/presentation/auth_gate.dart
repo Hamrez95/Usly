@@ -446,9 +446,8 @@ class _AuthPageState extends State<AuthPage> {
             ),
           ],
           selected: {_mode},
-          onSelectionChanged: _busy
-              ? null
-              : (value) => _selectMode(value.first),
+          onSelectionChanged:
+              _busy ? null : (value) => _selectMode(value.first),
         ),
         const SizedBox(height: 22),
         TextField(
@@ -603,20 +602,20 @@ class _InlineMessage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final (background, foreground, icon) = switch (tone) {
       _NoticeTone.success => (
-        colors.primaryContainer,
-        colors.onPrimaryContainer,
-        Icons.check_circle_outline_rounded,
-      ),
+          colors.primaryContainer,
+          colors.onPrimaryContainer,
+          Icons.check_circle_outline_rounded,
+        ),
       _NoticeTone.warning => (
-        colors.tertiaryContainer,
-        colors.onTertiaryContainer,
-        Icons.info_outline_rounded,
-      ),
+          colors.tertiaryContainer,
+          colors.onTertiaryContainer,
+          Icons.info_outline_rounded,
+        ),
       _NoticeTone.error => (
-        colors.errorContainer,
-        colors.onErrorContainer,
-        Icons.error_outline_rounded,
-      ),
+          colors.errorContainer,
+          colors.onErrorContainer,
+          Icons.error_outline_rounded,
+        ),
     };
     return Container(
       width: double.infinity,

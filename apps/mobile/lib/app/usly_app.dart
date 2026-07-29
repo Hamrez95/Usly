@@ -32,9 +32,8 @@ class _UslyAppState extends State<UslyApp> {
 
   Future<void> _toggleTheme() async {
     final brightness = Theme.of(context).brightness;
-    final next = brightness == Brightness.dark
-        ? ThemeMode.light
-        : ThemeMode.dark;
+    final next =
+        brightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
     setState(() => _themeMode = next);
     await widget.preferences.setString('usly.theme', next.name);
   }

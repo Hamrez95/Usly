@@ -159,36 +159,36 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
             onNext: _nextQuestion,
           )
         : !_state.revealSeen
-        ? _RevealPanel(
-            key: const ValueKey('reveal'),
-            aligned: _state.drafts[0].need == _state.drafts[1].need,
-            onContinue: () => _replace(revealSeen: true),
-          )
-        : !_state.bothVoted
-        ? _VotingPanel(
-            key: ValueKey('vote-${_state.partner}-${_state.variation}'),
-            partnerLabel: _partnerLabel,
-            options: recommend(_state),
-            onVote: _vote,
-          )
-        : _state.hasMatch
-        ? _MatchPanel(
-            key: const ValueKey('match'),
-            experience: recommend(
-              _state,
-            ).firstWhere((item) => item.id == _state.votes[0]),
-            selected: _state.selectedId != null,
-            onSelect: () => _replace(selectedId: _state.votes[0]),
-          )
-        : _NoMatchPanel(
-            key: const ValueKey('no-match'),
-            onRevote: () => _replace(votes: const {}, partner: 0),
-            onRefresh: () => _replace(
-              votes: const {},
-              partner: 0,
-              variation: _state.variation + 1,
-            ),
-          );
+            ? _RevealPanel(
+                key: const ValueKey('reveal'),
+                aligned: _state.drafts[0].need == _state.drafts[1].need,
+                onContinue: () => _replace(revealSeen: true),
+              )
+            : !_state.bothVoted
+                ? _VotingPanel(
+                    key: ValueKey('vote-${_state.partner}-${_state.variation}'),
+                    partnerLabel: _partnerLabel,
+                    options: recommend(_state),
+                    onVote: _vote,
+                  )
+                : _state.hasMatch
+                    ? _MatchPanel(
+                        key: const ValueKey('match'),
+                        experience: recommend(
+                          _state,
+                        ).firstWhere((item) => item.id == _state.votes[0]),
+                        selected: _state.selectedId != null,
+                        onSelect: () => _replace(selectedId: _state.votes[0]),
+                      )
+                    : _NoMatchPanel(
+                        key: const ValueKey('no-match'),
+                        onRevote: () => _replace(votes: const {}, partner: 0),
+                        onRefresh: () => _replace(
+                          votes: const {},
+                          partner: 0,
+                          variation: _state.variation + 1,
+                        ),
+                      );
 
     return Scaffold(
       appBar: AppBar(
@@ -259,10 +259,10 @@ class _CouplePulseHeader extends StatelessWidget {
     final step = !state.bothSubmitted
         ? state.submitted.length
         : !state.revealSeen
-        ? 2
-        : !state.bothVoted
-        ? 3
-        : 4;
+            ? 2
+            : !state.bothVoted
+                ? 3
+                : 4;
     final colors = Theme.of(context).colorScheme;
 
     return Semantics(
@@ -1002,18 +1002,18 @@ class _HandoffScreen extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                 ),
                 const SizedBox(height: 14),
                 Text(
                   body,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onPrimary.withValues(alpha: .85),
-                  ),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onPrimary.withValues(alpha: .85),
+                      ),
                 ),
                 const SizedBox(height: 42),
                 FilledButton(
@@ -1091,35 +1091,33 @@ class _AmbientPainter extends CustomPainter {
       Offset(size.width * .08, size.height * .16),
       size.width * .42,
       Paint()
-        ..shader =
-            RadialGradient(
-              colors: [
-                secondary.withValues(alpha: .12),
-                secondary.withValues(alpha: 0),
-              ],
-            ).createShader(
-              Rect.fromCircle(
-                center: Offset(size.width * .08, size.height * .16),
-                radius: size.width * .42,
-              ),
-            ),
+        ..shader = RadialGradient(
+          colors: [
+            secondary.withValues(alpha: .12),
+            secondary.withValues(alpha: 0),
+          ],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(size.width * .08, size.height * .16),
+            radius: size.width * .42,
+          ),
+        ),
     );
     canvas.drawCircle(
       Offset(size.width * .92, size.height * .72),
       size.width * .50,
       Paint()
-        ..shader =
-            RadialGradient(
-              colors: [
-                primary.withValues(alpha: .10),
-                primary.withValues(alpha: 0),
-              ],
-            ).createShader(
-              Rect.fromCircle(
-                center: Offset(size.width * .92, size.height * .72),
-                radius: size.width * .50,
-              ),
-            ),
+        ..shader = RadialGradient(
+          colors: [
+            primary.withValues(alpha: .10),
+            primary.withValues(alpha: 0),
+          ],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(size.width * .92, size.height * .72),
+            radius: size.width * .50,
+          ),
+        ),
     );
   }
 

@@ -149,8 +149,8 @@ class UslyGuestNotice extends StatelessWidget {
               child: Text(
                 'حساب مهمان موقت است؛ برای تست مناسب است، اما بعد از خروج یا حذف برنامه ممکن است قابل‌بازیابی نباشد.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.onTertiaryContainer,
-                ),
+                      color: colors.onTertiaryContainer,
+                    ),
               ),
             ),
           ],

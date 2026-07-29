@@ -458,8 +458,8 @@ class _OnlineQuestionCard extends StatelessWidget {
                 value <= 2
                     ? Icons.battery_1_bar_rounded
                     : value == 3
-                    ? Icons.battery_4_bar_rounded
-                    : Icons.battery_full_rounded,
+                        ? Icons.battery_4_bar_rounded
+                        : Icons.battery_full_rounded,
               ),
               selected: draft.energy == value,
               onSelected: (_) => onChanged(draft.copyWith(energy: value)),
@@ -534,13 +534,13 @@ class _OnlineQuestionCard extends StatelessWidget {
   }
 
   String _needLabel(WeeklyNeed value) => switch (value) {
-    WeeklyNeed.calm => 'آرامش',
-    WeeklyNeed.fun => 'تفریح',
-    WeeklyNeed.conversation => 'گفت‌وگو',
-    WeeklyNeed.novelty => 'تازگی',
-    WeeklyNeed.support => 'حمایت',
-    WeeklyNeed.play => 'بازی',
-  };
+        WeeklyNeed.calm => 'آرامش',
+        WeeklyNeed.fun => 'تفریح',
+        WeeklyNeed.conversation => 'گفت‌وگو',
+        WeeklyNeed.novelty => 'تازگی',
+        WeeklyNeed.support => 'حمایت',
+        WeeklyNeed.play => 'بازی',
+      };
 }
 
 class _OnlineVotingCard extends StatelessWidget {
@@ -652,10 +652,10 @@ class _OnlineVotingCard extends StatelessWidget {
   }
 
   String _kindLabel(String kind) => switch (kind) {
-    'easy' => 'آسان',
-    'balanced' => 'متعادل',
-    _ => 'متفاوت',
-  };
+        'easy' => 'آسان',
+        'balanced' => 'متعادل',
+        _ => 'متفاوت',
+      };
 }
 
 class _MetaChip extends StatelessWidget {
