@@ -115,8 +115,7 @@ class OnlineWeeklyRepository {
       ownVoteId: vote?['option_id'] as String?,
       hasSubmitted: response != null,
       options: (optionRows as List<dynamic>)
-          .map((row) =>
-              OnlineExperience.fromJson(row as Map<String, dynamic>))
+          .map((row) => OnlineExperience.fromJson(row as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -134,16 +133,10 @@ class OnlineWeeklyRepository {
     );
   }
 
-  Future<void> vote({
-    required String syncId,
-    required String optionId,
-  }) async {
+  Future<void> vote({required String syncId, required String optionId}) async {
     await _client.rpc(
       'vote_weekly_option',
-      params: {
-        'p_weekly_sync_id': syncId,
-        'p_option_id': optionId,
-      },
+      params: {'p_weekly_sync_id': syncId, 'p_option_id': optionId},
     );
   }
 

@@ -8,11 +8,7 @@ import 'package:usly/features/weekly/data/local_weekly_store.dart';
 import 'package:usly/features/weekly/presentation/weekly_ritual_page.dart';
 
 class UslyApp extends StatefulWidget {
-  const UslyApp({
-    required this.preferences,
-    this.client,
-    super.key,
-  });
+  const UslyApp({required this.preferences, this.client, super.key});
 
   final SharedPreferences preferences;
   final SupabaseClient? client;
@@ -36,7 +32,9 @@ class _UslyAppState extends State<UslyApp> {
 
   Future<void> _toggleTheme() async {
     final brightness = Theme.of(context).brightness;
-    final next = brightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+    final next = brightness == Brightness.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
     setState(() => _themeMode = next);
     await widget.preferences.setString('usly.theme', next.name);
   }

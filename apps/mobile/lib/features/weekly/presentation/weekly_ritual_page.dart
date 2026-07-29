@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:usly/core/theme/usly_theme.dart';
+import 'package:usly/core/widgets/usly_brand.dart';
 import 'package:usly/features/weekly/data/local_weekly_store.dart';
 import 'package:usly/features/weekly/domain/weekly_models.dart';
 
@@ -80,9 +81,7 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
       clearSelection: true,
     );
     await _showHandoff(
-      submitted.length == 1
-          ? 'حالا نوبت همراهت است'
-          : 'هر دو پاسخ آماده‌اند',
+      submitted.length == 1 ? 'حالا نوبت همراهت است' : 'هر دو پاسخ آماده‌اند',
       submitted.length == 1
           ? 'صفحه کاملاً پوشیده شده؛ گوشی را با خیال راحت تحویل بده.'
           : 'پاسخ‌های خام نمایش داده نمی‌شوند. فقط زمینه مشترک ساخته می‌شود.',
@@ -123,9 +122,14 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.restart_alt_rounded),
         title: const Text('این هفته از نو شروع شود؟'),
-        content: const Text('فقط پاسخ‌ها، رأی‌ها و انتخاب همین هفته پاک می‌شود. تنظیمات اپ باقی می‌ماند.'),
+        content: const Text(
+          'فقط پاسخ‌ها، رأی‌ها و انتخاب همین هفته پاک می‌شود. تنظیمات اپ باقی می‌ماند.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('نه، نگهش دار')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('نه، نگهش دار'),
+          ),
           FilledButton.tonal(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('شروع دوباره'),
@@ -155,38 +159,40 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
             onNext: _nextQuestion,
           )
         : !_state.revealSeen
-            ? _RevealPanel(
-                key: const ValueKey('reveal'),
-                aligned: _state.drafts[0].need == _state.drafts[1].need,
-                onContinue: () => _replace(revealSeen: true),
-              )
-            : !_state.bothVoted
-                ? _VotingPanel(
-                    key: ValueKey('vote-${_state.partner}-${_state.variation}'),
-                    partnerLabel: _partnerLabel,
-                    options: recommend(_state),
-                    onVote: _vote,
-                  )
-                : _state.hasMatch
-                    ? _MatchPanel(
-                        key: const ValueKey('match'),
-                        experience: recommend(_state).firstWhere((item) => item.id == _state.votes[0]),
-                        selected: _state.selectedId != null,
-                        onSelect: () => _replace(selectedId: _state.votes[0]),
-                      )
-                    : _NoMatchPanel(
-                        key: const ValueKey('no-match'),
-                        onRevote: () => _replace(votes: const {}, partner: 0),
-                        onRefresh: () => _replace(
-                          votes: const {},
-                          partner: 0,
-                          variation: _state.variation + 1,
-                        ),
-                      );
+        ? _RevealPanel(
+            key: const ValueKey('reveal'),
+            aligned: _state.drafts[0].need == _state.drafts[1].need,
+            onContinue: () => _replace(revealSeen: true),
+          )
+        : !_state.bothVoted
+        ? _VotingPanel(
+            key: ValueKey('vote-${_state.partner}-${_state.variation}'),
+            partnerLabel: _partnerLabel,
+            options: recommend(_state),
+            onVote: _vote,
+          )
+        : _state.hasMatch
+        ? _MatchPanel(
+            key: const ValueKey('match'),
+            experience: recommend(
+              _state,
+            ).firstWhere((item) => item.id == _state.votes[0]),
+            selected: _state.selectedId != null,
+            onSelect: () => _replace(selectedId: _state.votes[0]),
+          )
+        : _NoMatchPanel(
+            key: const ValueKey('no-match'),
+            onRevote: () => _replace(votes: const {}, partner: 0),
+            onRefresh: () => _replace(
+              votes: const {},
+              partner: 0,
+              variation: _state.variation + 1,
+            ),
+          );
 
     return Scaffold(
       appBar: AppBar(
-        title: const _Wordmark(),
+        title: const UslyBrandMark(size: 36),
         actions: [
           IconButton(
             onPressed: widget.onToggleTheme,
@@ -207,7 +213,12 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
           SafeArea(
             top: false,
             child: ListView(
-              padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 40),
+              padding: EdgeInsetsDirectional.fromSTEB(
+                UslySpacing.pagePadding(context),
+                8,
+                UslySpacing.pagePadding(context),
+                40,
+              ),
               children: [
                 _CouplePulseHeader(state: _state),
                 const SizedBox(height: 24),
@@ -238,30 +249,6 @@ class _WeeklyRitualPageState extends State<WeeklyRitualPage> {
   }
 }
 
-class _Wordmark extends StatelessWidget {
-  const _Wordmark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(Icons.all_inclusive_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 20),
-        ),
-        const SizedBox(width: 10),
-        Text('Usly', style: Theme.of(context).textTheme.titleLarge),
-      ],
-    );
-  }
-}
-
 class _CouplePulseHeader extends StatelessWidget {
   const _CouplePulseHeader({required this.state});
 
@@ -272,10 +259,10 @@ class _CouplePulseHeader extends StatelessWidget {
     final step = !state.bothSubmitted
         ? state.submitted.length
         : !state.revealSeen
-            ? 2
-            : !state.bothVoted
-                ? 3
-                : 4;
+        ? 2
+        : !state.bothVoted
+        ? 3
+        : 4;
     final colors = Theme.of(context).colorScheme;
 
     return Semantics(
@@ -312,9 +299,15 @@ class _CouplePulseHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text('کمتر در اپ؛ بیشتر باهم.', style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            'کمتر در اپ؛ بیشتر باهم.',
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 6),
-          Text('یک هماهنگی کوتاه برای یک قرار واقعی در همین هفته.', style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            'یک هماهنگی کوتاه برای یک قرار واقعی در همین هفته.',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ],
       ),
     );
@@ -329,7 +322,9 @@ class _PulseDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline;
+    final color = active
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.outline;
     return Row(
       children: [
         AnimatedContainer(
@@ -340,7 +335,11 @@ class _PulseDot extends StatelessWidget {
             color: color.withValues(alpha: active ? 1 : .12),
             shape: BoxShape.circle,
           ),
-          child: Icon(active ? Icons.check_rounded : Icons.person_outline_rounded, size: 17, color: active ? Theme.of(context).colorScheme.onPrimary : color),
+          child: Icon(
+            active ? Icons.check_rounded : Icons.person_outline_rounded,
+            size: 17,
+            color: active ? Theme.of(context).colorScheme.onPrimary : color,
+          ),
         ),
         const SizedBox(width: 7),
         Text(label, style: Theme.of(context).textTheme.labelLarge),
@@ -390,22 +389,35 @@ class _SyncPanel extends StatelessWidget {
                   label: Text('پاسخ خصوصی $partnerLabel'),
                 ),
                 const Spacer(),
-                Text('${questionIndex + 1} / ۵', style: Theme.of(context).textTheme.labelLarge),
+                Text(
+                  '${questionIndex + 1} / ۵',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
               ],
             ),
             const SizedBox(height: 20),
-            Text(_titles[questionIndex], style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              _titles[questionIndex],
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 20),
             _question(context),
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: onNext,
-              icon: Icon(questionIndex == 4 ? Icons.lock_rounded : Icons.arrow_back_rounded),
+              icon: Icon(
+                questionIndex == 4
+                    ? Icons.lock_rounded
+                    : Icons.arrow_back_rounded,
+              ),
               label: Text(questionIndex == 4 ? 'ثبت امن پاسخ‌ها' : 'بعدی'),
             ),
             if (submittedCount == 1) ...[
               const SizedBox(height: 12),
-              Text('پاسخ نفر اول امن ثبت شده؛ پاسخ خام او اینجا نمایش داده نمی‌شود.', style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                'پاسخ نفر اول امن ثبت شده؛ پاسخ خام او اینجا نمایش داده نمی‌شود.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ],
         ),
@@ -416,23 +428,42 @@ class _SyncPanel extends StatelessWidget {
   Widget _question(BuildContext context) {
     switch (questionIndex) {
       case 0:
-        return Row(
-          children: List.generate(5, (index) {
-            final value = index + 1;
-            final selected = draft.energy == value;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsetsDirectional.only(end: index == 4 ? 0 : 8),
-                child: _ChoiceTile(
-                  label: const ['خیلی کم', 'کم', 'معمولی', 'خوب', 'پر انرژی'][index],
-                  icon: [Icons.battery_0_bar, Icons.battery_2_bar, Icons.battery_4_bar, Icons.battery_5_bar, Icons.battery_full][index],
-                  selected: selected,
-                  compact: true,
-                  onTap: () => onChanged(draft.copyWith(energy: value)),
-                ),
-              ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final tileWidth = constraints.maxWidth < 340
+                ? constraints.maxWidth
+                : (constraints.maxWidth - 10) / 2;
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: List.generate(5, (index) {
+                final value = index + 1;
+                final selected = draft.energy == value;
+                return SizedBox(
+                  width: tileWidth,
+                  child: _ChoiceTile(
+                    label: const [
+                      'خیلی کم',
+                      'کم',
+                      'معمولی',
+                      'خوب',
+                      'پر انرژی',
+                    ][index],
+                    icon: const [
+                      Icons.battery_0_bar,
+                      Icons.battery_2_bar,
+                      Icons.battery_4_bar,
+                      Icons.battery_5_bar,
+                      Icons.battery_full,
+                    ][index],
+                    selected: selected,
+                    compact: true,
+                    onTap: () => onChanged(draft.copyWith(energy: value)),
+                  ),
+                );
+              }),
             );
-          }),
+          },
         );
       case 1:
         return _ChoiceWrap<WeeklyNeed>(
@@ -440,7 +471,10 @@ class _SyncPanel extends StatelessWidget {
           values: const {
             WeeklyNeed.calm: ('آرامش', Icons.spa_outlined),
             WeeklyNeed.fun: ('تفریح', Icons.celebration_outlined),
-            WeeklyNeed.conversation: ('گفت‌وگو', Icons.chat_bubble_outline_rounded),
+            WeeklyNeed.conversation: (
+              'گفت‌وگو',
+              Icons.chat_bubble_outline_rounded,
+            ),
             WeeklyNeed.novelty: ('تجربه تازه', Icons.explore_outlined),
             WeeklyNeed.support: ('حمایت', Icons.handshake_outlined),
             WeeklyNeed.play: ('خنده و بازی', Icons.casino_outlined),
@@ -482,7 +516,11 @@ class _SyncPanel extends StatelessWidget {
 }
 
 class _ChoiceWrap<T> extends StatelessWidget {
-  const _ChoiceWrap({required this.value, required this.values, required this.onChanged});
+  const _ChoiceWrap({
+    required this.value,
+    required this.values,
+    required this.onChanged,
+  });
 
   final T value;
   final Map<T, (String, IconData)> values;
@@ -537,24 +575,33 @@ class _ChoiceTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: UslyMotion.quick(context),
-          constraints: BoxConstraints(minHeight: compact ? 78 : 82),
-          padding: EdgeInsets.all(compact ? 8 : 14),
+          constraints: BoxConstraints(minHeight: compact ? 68 : 82),
+          padding: EdgeInsets.all(compact ? 10 : 14),
           decoration: BoxDecoration(
-            color: selected ? colors.primary.withValues(alpha: .15) : colors.surface,
+            color: selected
+                ? colors.primary.withValues(alpha: .15)
+                : colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: selected ? colors.primary : colors.outlineVariant),
+            border: Border.all(
+              color: selected ? colors.primary : colors.outlineVariant,
+            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: selected ? colors.primary : colors.onSurfaceVariant),
+              Icon(
+                icon,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
+              ),
               const SizedBox(height: 7),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: compact ? 11 : 14),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontSize: compact ? 13 : 14),
               ),
             ],
           ),
@@ -565,7 +612,11 @@ class _ChoiceTile extends StatelessWidget {
 }
 
 class _RevealPanel extends StatelessWidget {
-  const _RevealPanel({required this.aligned, required this.onContinue, super.key});
+  const _RevealPanel({
+    required this.aligned,
+    required this.onContinue,
+    super.key,
+  });
 
   final bool aligned;
   final VoidCallback onContinue;
@@ -594,7 +645,9 @@ class _RevealPanel extends StatelessWidget {
               ),
             ),
             Text(
-              aligned ? 'این هفته روی یک ریتم هستید' : 'دو ریتم متفاوت، یک قرار ممکن',
+              aligned
+                  ? 'این هفته روی یک ریتم هستید'
+                  : 'دو ریتم متفاوت، یک قرار ممکن',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
@@ -636,9 +689,15 @@ class _VotingPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('انتخاب خصوصی $partnerLabel', style: Theme.of(context).textTheme.headlineSmall),
+        Text(
+          'انتخاب خصوصی $partnerLabel',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
         const SizedBox(height: 6),
-        Text('یک گزینه را انتخاب کن؛ رأی تو برای همراهت نمایش داده نمی‌شود.', style: Theme.of(context).textTheme.bodyLarge),
+        Text(
+          'یک گزینه را انتخاب کن؛ رأی تو برای همراهت نمایش داده نمی‌شود.',
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
         const SizedBox(height: 16),
         ...options.indexed.map(
           (entry) => Padding(
@@ -671,7 +730,7 @@ class _ExperienceCard extends StatelessWidget {
     final colors = [
       Theme.of(context).colorScheme.primary,
       Theme.of(context).colorScheme.secondary,
-      UslyColors.coralLight,
+      UslyPalette.of(context).coral,
     ];
     final accent = colors[accentIndex % colors.length];
     return Card(
@@ -682,7 +741,9 @@ class _ExperienceCard extends StatelessWidget {
           Container(
             height: 10,
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [accent, accent.withValues(alpha: .25)]),
+              gradient: LinearGradient(
+                colors: [accent, accent.withValues(alpha: .25)],
+              ),
             ),
           ),
           Padding(
@@ -692,15 +753,27 @@ class _ExperienceCard extends StatelessWidget {
               children: [
                 Chip(label: Text(experience.type)),
                 const SizedBox(height: 8),
-                Text(experience.title, style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  experience.title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 12,
                   runSpacing: 8,
                   children: [
-                    _Meta(icon: Icons.schedule_rounded, label: experience.duration),
-                    _Meta(icon: Icons.wallet_outlined, label: experience.budget),
-                    _Meta(icon: Icons.place_outlined, label: experience.setting),
+                    _Meta(
+                      icon: Icons.schedule_rounded,
+                      label: experience.duration,
+                    ),
+                    _Meta(
+                      icon: Icons.wallet_outlined,
+                      label: experience.budget,
+                    ),
+                    _Meta(
+                      icon: Icons.place_outlined,
+                      label: experience.setting,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -714,7 +787,11 @@ class _ExperienceCard extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.auto_awesome_rounded, size: 19, color: accent),
+                        Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 19,
+                          color: accent,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(child: Text(experience.reason)),
                       ],
@@ -722,7 +799,10 @@ class _ExperienceCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(experience.instructions, style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  experience.instructions,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: onVote,
@@ -758,7 +838,11 @@ class _Meta extends StatelessWidget {
 }
 
 class _NoMatchPanel extends StatelessWidget {
-  const _NoMatchPanel({required this.onRevote, required this.onRefresh, super.key});
+  const _NoMatchPanel({
+    required this.onRevote,
+    required this.onRefresh,
+    super.key,
+  });
 
   final VoidCallback onRevote;
   final VoidCallback onRefresh;
@@ -770,11 +854,22 @@ class _NoMatchPanel extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(Icons.alt_route_rounded, size: 60, color: Theme.of(context).colorScheme.primary),
+            Icon(
+              Icons.alt_route_rounded,
+              size: 60,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(height: 16),
-            Text('این بار انتخاب مشترک پیدا نشد', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'این بار انتخاب مشترک پیدا نشد',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
-            const Text('رأی‌ها همچنان خصوصی‌اند. پاسخ‌های هفتگی‌تان هم پاک نمی‌شود.', textAlign: TextAlign.center),
+            const Text(
+              'رأی‌ها همچنان خصوصی‌اند. پاسخ‌های هفتگی‌تان هم پاک نمی‌شود.',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 22),
             FilledButton.icon(
               onPressed: onRefresh,
@@ -819,33 +914,58 @@ class _MatchPanel extends StatelessWidget {
                 duration: UslyMotion.reveal(context),
                 curve: Curves.elasticOut,
                 tween: Tween(begin: .7, end: 1),
-                builder: (_, scale, child) => Transform.scale(scale: scale, child: child),
+                builder: (_, scale, child) =>
+                    Transform.scale(scale: scale, child: child),
                 child: Container(
                   width: 88,
                   height: 88,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withValues(alpha: .25),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withValues(alpha: .25),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.done_all_rounded, size: 44, color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    Icons.done_all_rounded,
+                    size: 44,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Center(child: Text('انتخاب مشترک پیدا شد', style: Theme.of(context).textTheme.headlineSmall)),
+            Center(
+              child: Text(
+                'انتخاب مشترک پیدا شد',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+            ),
             const SizedBox(height: 18),
-            Text(experience.title, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              experience.title,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(experience.instructions),
             const SizedBox(height: 22),
             FilledButton.icon(
               onPressed: selected ? null : onSelect,
-              icon: Icon(selected ? Icons.check_circle_rounded : Icons.calendar_month_outlined),
-              label: Text(selected ? 'برای این هفته ثبت شد' : 'ثبت برای این هفته'),
+              icon: Icon(
+                selected
+                    ? Icons.check_circle_rounded
+                    : Icons.calendar_month_outlined,
+              ),
+              label: Text(
+                selected ? 'برای این هفته ثبت شد' : 'ثبت برای این هفته',
+              ),
             ),
             if (selected) ...[
               const SizedBox(height: 12),
-              const Center(child: Text('گام بعدی نسخه آنلاین: زمان‌بندی، انجام و بازخورد دونفره.')),
+              const Center(
+                child: Text(
+                  'گام بعدی نسخه آنلاین: زمان‌بندی، انجام و بازخورد دونفره.',
+                ),
+              ),
             ],
           ],
         ),
@@ -872,18 +992,28 @@ class _HandoffScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.shield_outlined, size: 84, color: Theme.of(context).colorScheme.onPrimary),
+                Icon(
+                  Icons.shield_outlined,
+                  size: 84,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
                 const SizedBox(height: 28),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Text(
                   body,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: .85)),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onPrimary.withValues(alpha: .85),
+                  ),
                 ),
                 const SizedBox(height: 42),
                 FilledButton(
@@ -914,7 +1044,11 @@ class _PrivacySeal extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock_outline_rounded, size: 17, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 17,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(width: 7),
           Flexible(
             child: Text(
@@ -957,17 +1091,35 @@ class _AmbientPainter extends CustomPainter {
       Offset(size.width * .08, size.height * .16),
       size.width * .42,
       Paint()
-        ..shader = RadialGradient(
-          colors: [secondary.withValues(alpha: .12), secondary.withValues(alpha: 0)],
-        ).createShader(Rect.fromCircle(center: Offset(size.width * .08, size.height * .16), radius: size.width * .42)),
+        ..shader =
+            RadialGradient(
+              colors: [
+                secondary.withValues(alpha: .12),
+                secondary.withValues(alpha: 0),
+              ],
+            ).createShader(
+              Rect.fromCircle(
+                center: Offset(size.width * .08, size.height * .16),
+                radius: size.width * .42,
+              ),
+            ),
     );
     canvas.drawCircle(
       Offset(size.width * .92, size.height * .72),
       size.width * .50,
       Paint()
-        ..shader = RadialGradient(
-          colors: [primary.withValues(alpha: .10), primary.withValues(alpha: 0)],
-        ).createShader(Rect.fromCircle(center: Offset(size.width * .92, size.height * .72), radius: size.width * .50)),
+        ..shader =
+            RadialGradient(
+              colors: [
+                primary.withValues(alpha: .10),
+                primary.withValues(alpha: 0),
+              ],
+            ).createShader(
+              Rect.fromCircle(
+                center: Offset(size.width * .92, size.height * .72),
+                radius: size.width * .50,
+              ),
+            ),
     );
   }
 
@@ -994,16 +1146,30 @@ class _ConvergingPathsPainter extends CustomPainter {
     final right = Offset(size.width * .83, size.height * .25);
     final leftPath = Path()
       ..moveTo(left.dx, left.dy)
-      ..quadraticBezierTo(size.width * .28, size.height * .72, center.dx, center.dy);
+      ..quadraticBezierTo(
+        size.width * .28,
+        size.height * .72,
+        center.dx,
+        center.dy,
+      );
     final rightPath = Path()
       ..moveTo(right.dx, right.dy)
-      ..quadraticBezierTo(size.width * .72, size.height * .72, center.dx, center.dy);
+      ..quadraticBezierTo(
+        size.width * .72,
+        size.height * .72,
+        center.dx,
+        center.dy,
+      );
     _drawPartial(canvas, leftPath, primary, progress);
     _drawPartial(canvas, rightPath, secondary, progress);
     canvas.drawCircle(left, 13, Paint()..color = primary);
     canvas.drawCircle(right, 13, Paint()..color = secondary);
     if (progress > .86) {
-      canvas.drawCircle(center, 10 + 8 * math.sin((progress - .86) / .14 * math.pi), Paint()..color = primary.withValues(alpha: .8));
+      canvas.drawCircle(
+        center,
+        10 + 8 * math.sin((progress - .86) / .14 * math.pi),
+        Paint()..color = primary.withValues(alpha: .8),
+      );
     }
   }
 
@@ -1020,5 +1186,6 @@ class _ConvergingPathsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ConvergingPathsPainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _ConvergingPathsPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

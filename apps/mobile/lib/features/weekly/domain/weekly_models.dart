@@ -38,19 +38,21 @@ class WeeklyDraft {
   }
 
   Map<String, Object> toJson() => {
-        'energy': energy,
-        'need': need.name,
-        'budget': budget.name,
-        'duration': duration.name,
-        'setting': setting.name,
-      };
+    'energy': energy,
+    'need': need.name,
+    'budget': budget.name,
+    'duration': duration.name,
+    'setting': setting.name,
+  };
 
   factory WeeklyDraft.fromJson(Map<String, dynamic> json) {
     return WeeklyDraft(
       energy: json['energy'] as int? ?? 3,
       need: WeeklyNeed.values.byName(json['need'] as String? ?? 'calm'),
       budget: BudgetBand.values.byName(json['budget'] as String? ?? 'free'),
-      duration: DurationBand.values.byName(json['duration'] as String? ?? 'short'),
+      duration: DurationBand.values.byName(
+        json['duration'] as String? ?? 'short',
+      ),
       setting: SettingBand.values.byName(json['setting'] as String? ?? 'home'),
     );
   }
@@ -91,15 +93,15 @@ class WeeklySnapshot {
   });
 
   factory WeeklySnapshot.initial() => const WeeklySnapshot(
-        drafts: [WeeklyDraft(), WeeklyDraft()],
-        submitted: <int>{},
-        votes: <int, int>{},
-        partner: 0,
-        questionIndex: 0,
-        revealSeen: false,
-        variation: 0,
-        selectedId: null,
-      );
+    drafts: [WeeklyDraft(), WeeklyDraft()],
+    submitted: <int>{},
+    votes: <int, int>{},
+    partner: 0,
+    questionIndex: 0,
+    revealSeen: false,
+    variation: 0,
+    selectedId: null,
+  );
 
   final List<WeeklyDraft> drafts;
   final Set<int> submitted;
@@ -119,10 +121,15 @@ List<Experience> recommend(WeeklySnapshot state) {
   final first = state.drafts[0];
   final second = state.drafts[1];
   final lowEnergy = first.energy <= 2 || second.energy <= 2;
-  final free = first.budget == BudgetBand.free || second.budget == BudgetBand.free;
-  final atHome = first.setting == SettingBand.home || second.setting == SettingBand.home;
-  final needsTalk = first.need == WeeklyNeed.conversation || second.need == WeeklyNeed.conversation;
-  final wantsPlay = first.need == WeeklyNeed.play || second.need == WeeklyNeed.play;
+  final free =
+      first.budget == BudgetBand.free || second.budget == BudgetBand.free;
+  final atHome =
+      first.setting == SettingBand.home || second.setting == SettingBand.home;
+  final needsTalk =
+      first.need == WeeklyNeed.conversation ||
+      second.need == WeeklyNeed.conversation;
+  final wantsPlay =
+      first.need == WeeklyNeed.play || second.need == WeeklyNeed.play;
   final seed = state.variation * 10;
 
   return [
@@ -133,7 +140,9 @@ List<Experience> recommend(WeeklySnapshot state) {
       duration: '۳۰ دقیقه',
       budget: free ? 'رایگان' : 'کم',
       setting: 'خانه',
-      reason: lowEnergy ? 'چون انرژی یکی از شما پایین‌تر است.' : 'شروع ساده و بدون برنامه‌ریزی می‌خواهید.',
+      reason: lowEnergy
+          ? 'چون انرژی یکی از شما پایین‌تر است.'
+          : 'شروع ساده و بدون برنامه‌ریزی می‌خواهید.',
       instructions: needsTalk
           ? 'موبایل‌ها را کنار بگذارید و هر نفر فقط از بهترین لحظه هفته بگوید.'
           : 'یک نوشیدنی آماده کنید و سه آهنگ انتخاب کنید که حال این هفته‌تان را بهتر می‌کند.',
@@ -141,11 +150,15 @@ List<Experience> recommend(WeeklySnapshot state) {
     Experience(
       id: seed + 2,
       type: 'متعادل',
-      title: atHome ? 'آشپزی دونفره با قانون انتخاب تصادفی' : 'قدم‌زدن با مسیر ناشناخته',
+      title: atHome
+          ? 'آشپزی دونفره با قانون انتخاب تصادفی'
+          : 'قدم‌زدن با مسیر ناشناخته',
       duration: '۶۰ دقیقه',
       budget: free ? 'رایگان' : 'کم',
       setting: atHome ? 'خانه' : 'بیرون',
-      reason: wantsPlay ? 'چون بازی و تنوع در انتخاب هر دو دیده شده.' : 'بین آرامش و تازگی تعادل دارد.',
+      reason: wantsPlay
+          ? 'چون بازی و تنوع در انتخاب هر دو دیده شده.'
+          : 'بین آرامش و تازگی تعادل دارد.',
       instructions: atHome
           ? 'سه انتخاب کوچک—غذا، آهنگ و نوشیدنی—را با قرعه بین خودتان تقسیم کنید.'
           : 'یک مسیر نزدیک اما نرفته را انتخاب کنید و وسط راه برای یک خوراکی کوچک توقف کنید.',
@@ -153,7 +166,9 @@ List<Experience> recommend(WeeklySnapshot state) {
     Experience(
       id: seed + 3,
       type: 'متفاوت',
-      title: state.variation.isEven ? 'قرار سه انتخاب شانسی' : 'ماموریت عکس بدون انتشار',
+      title: state.variation.isEven
+          ? 'قرار سه انتخاب شانسی'
+          : 'ماموریت عکس بدون انتشار',
       duration: '۹۰ دقیقه',
       budget: free ? 'رایگان' : 'متوسط',
       setting: 'فرقی ندارد',

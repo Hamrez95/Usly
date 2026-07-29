@@ -2,6 +2,68 @@
 
 This roadmap is organized by gates. Dates are relative because development must stop if validation fails.
 
+## Current delivery ladder — July 2026
+
+Status legend: `[x]` implemented in the current candidate, `[~]` implemented
+but not yet proven by CI/device/integration evidence, `[ ]` not implemented.
+
+### v0.3.1 — Security and Auth stabilization
+
+- [~] Deterministic account creation outcome.
+- [~] Confirmation-required screen, resend cooldown and actionable errors.
+- [~] Temporary guest warning and no silent account-loss expectation.
+- [ ] Remove recommendation text that permits partner-answer inference.
+- [ ] Serialize concurrent weekly submissions and prove option generation.
+- [ ] Increase pairing-code entropy and add attempt throttling/audit.
+- [ ] Add database/RLS/replay/expiry/concurrency integration tests.
+- [ ] Prove real email Auth and the two-device pairing/sync/vote/match path.
+
+### v0.4.0 — Internal Alpha and complete value loop
+
+- [~] Bundled Persian typography and phone-first responsive tokens.
+- [~] Original app icon, in-app mark and non-judgmental companion system.
+- [~] Consistent Auth, Pairing, Weekly, Waiting and Match states.
+- [ ] Complete password recovery with verified deep links and new-password state.
+- [ ] Add timezone-aware ritual weeks and separate staging/production config.
+- [ ] Add 30 curated, privacy-safe experience cards with neutral reasons.
+- [ ] Complete Match → schedule → complete/skip → feedback → history.
+- [ ] Add safe pending-cancel, pause and unpair flows.
+- [ ] Complete loading/error/offline/recovery states and durable local drafts.
+- [~] 360dp / 200% text / Light-Dark / RTL baseline; expand it to every journey.
+- [ ] Reproducible Android runner, hashed APK and stability report.
+
+### v0.5.0 — Closed Beta
+
+- [ ] Expand to 60–100 reviewed experience cards.
+- [ ] Add onboarding, consent/privacy versioning and safe reminder controls.
+- [ ] Add account export/delete, immediate unpair revocation and support entry.
+- [ ] Add privacy-safe analytics for activation, selection, completion and retention.
+- [ ] Add monitoring with sensitive-data scrubbing and backup/restore rehearsal.
+- [ ] Run a controlled 5–10-couple beta with zero P0/P1.
+
+### v0.6.0 — Validation Beta
+
+- [ ] Run a four-week pilot with 20 couples.
+- [ ] Target invitation acceptance >= 70%, completion >= 40% and week-four
+      couple retention >= 50%.
+- [ ] Investigate every pressure/privacy report; target harm reports < 10%.
+
+### v0.7.0 — Delight Beta
+
+- [ ] Shared companion space that celebrates completion without streak pressure.
+- [ ] Privacy-safe home widget for the selected experience.
+- [ ] Limited wishlist/sparks and optional memory cards.
+- [ ] Keep each feature only when it improves completion or retention without pressure.
+
+### v1.0.0 — Stable Android Persian
+
+- [ ] External security/privacy review, production signing and proven rollback.
+- [ ] Incident response, monitoring, support and staged rollout.
+- [ ] Stable Persian Android release; iOS and English follow evidence, not the version number.
+
+Only a candidate with zero P0/P1, all applicable hard gates and a Foundry score
+of at least 90/100 can merge through `dev` to `main`.
+
 ## Phase 0 — Foundation and naming (Week 0)
 - [ ] Confirm working product name and alternatives.
 - [ ] Run app-store, domain, social-handle, and trademark checks.

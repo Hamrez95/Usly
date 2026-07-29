@@ -1,11 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CoupleState {
-  const CoupleState({
-    this.coupleId,
-    this.status,
-    this.createdBy,
-  });
+  const CoupleState({this.coupleId, this.status, this.createdBy});
 
   final String? coupleId;
   final String? status;

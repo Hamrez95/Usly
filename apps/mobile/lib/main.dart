@@ -11,10 +11,5 @@ Future<void> main() async {
     publishableKey: UslyBackend.publishableKey,
   );
   final preferences = await SharedPreferences.getInstance();
-  runApp(
-    UslyApp(
-      preferences: preferences,
-      client: Supabase.instance.client,
-    ),
-  );
+  runApp(UslyApp(preferences: preferences, client: Supabase.instance.client));
 }

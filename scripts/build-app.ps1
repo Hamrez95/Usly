@@ -45,6 +45,11 @@ try {
         & $flutter.Source pub get
         if ($LASTEXITCODE -ne 0) { throw "دریافت dependencyها شکست خورد." }
     }
+    Copy-Item `
+        -Path (Join-Path $appRoot "tool/android-res/*") `
+        -Destination (Join-Path $appRoot "android/app/src/main/res") `
+        -Recurse `
+        -Force
 
     $mode = "--$($Configuration.ToLowerInvariant())"
     if ($Target -eq "android-apk") {

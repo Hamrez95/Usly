@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Usly adaptive icon foreground</title>
+  <desc id="desc">Two warm rounded paths meet in a shared U.</desc>
+  <path d="M292 252v274c0 126 82 224 220 246" fill="none" stroke="#FFF8EE" stroke-width="142" stroke-linecap="round"/>
+  <path d="M732 252v274c0 126-82 224-220 246" fill="none" stroke="#F2B544" stroke-width="142" stroke-linecap="round"/>
+  <path d="M512 322l22 42 46 7-33 32 8 46-43-22-43 22 8-46-33-32 46-7z" fill="#E66B5B"/>
+</svg>

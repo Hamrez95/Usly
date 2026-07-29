@@ -5,12 +5,14 @@ on:
     branches:
       - feature/mobile-v0.1
       - feat/usly-alpha-redesign
+      - "fix/**"
       - dev
+      - main
     paths:
       - 'apps/mobile/**'
       - '.github/workflows/mobile-build.yml'
   pull_request:
-    branches: [dev]
+    branches: [dev, main]
     paths:
       - 'apps/mobile/**'
       - '.github/workflows/mobile-build.yml'
@@ -45,9 +47,13 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
-      - name: Format generated checkout
+      - name: Install launcher resources
         working-directory: apps/mobile
-        run: dart format lib test
+        run: cp -R tool/android-res/. android/app/src/main/res/
+
+      - name: Check formatting
+        working-directory: apps/mobile
+        run: dart format --output=none --set-exit-if-changed lib test
 
       - name: Analyze
         working-directory: apps/mobile
@@ -59,14 +65,26 @@ jobs:
 
       - name: Build APK
         working-directory: apps/mobile
-        run: flutter build apk --release --build-name 0.3.0 --build-number 3
+        run: flutter build apk --release
 
       - name: Publish APK
         uses: actions/upload-artifact@v4
         with:
-          name: usly-android-v0.3.0-alpha
+          name: usly-android-v0.4.0-beta.1
           path: |
             apps/mobile/build/app/outputs/flutter-apk/app-release.apk
             apps/mobile/pubspec.lock
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish reproducible generated source
+        uses: actions/upload-artifact@v4
+        with:
+          name: usly-generated-source-v0.4.0-beta.1
+          path: |
+            apps/mobile/android
+            apps/mobile/lib
+            apps/mobile/test
+            apps/mobile/pubspec.lock
+          if-no-files-found: error
+          retention-days: 7

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:usly/core/theme/usly_theme.dart';
+import 'package:usly/core/widgets/usly_brand.dart';
 import 'package:usly/features/couple/data/couple_repository.dart';
 import 'package:usly/features/weekly/presentation/online_weekly_page.dart';
 
@@ -10,11 +12,13 @@ class CoupleGate extends StatefulWidget {
   const CoupleGate({
     required this.client,
     required this.onToggleTheme,
+    this.isTemporaryGuest = false,
     super.key,
   });
 
   final SupabaseClient client;
   final VoidCallback onToggleTheme;
+  final bool isTemporaryGuest;
 
   @override
   State<CoupleGate> createState() => _CoupleGateState();
@@ -69,14 +73,13 @@ class _CoupleGateState extends State<CoupleGate> {
       return _ConnectionError(onRetry: _load);
     }
     if (_state == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_state!.isActive) {
       return OnlineWeeklyPage(
         client: widget.client,
         coupleId: _state!.coupleId!,
+        isTemporaryGuest: widget.isTemporaryGuest,
         onToggleTheme: widget.onToggleTheme,
       );
     }
@@ -85,6 +88,7 @@ class _CoupleGateState extends State<CoupleGate> {
       repository: _repository,
       state: _state!,
       invite: _invite,
+      isTemporaryGuest: widget.isTemporaryGuest,
       onInviteChanged: (invite) => setState(() => _invite = invite),
       onStateChanged: _load,
       onToggleTheme: widget.onToggleTheme,
@@ -101,6 +105,7 @@ class _PairingPage extends StatefulWidget {
     required this.onInviteChanged,
     required this.onStateChanged,
     required this.onToggleTheme,
+    required this.isTemporaryGuest,
   });
 
   final SupabaseClient client;
@@ -110,6 +115,7 @@ class _PairingPage extends StatefulWidget {
   final ValueChanged<PairingInvite?> onInviteChanged;
   final VoidCallback onStateChanged;
   final VoidCallback onToggleTheme;
+  final bool isTemporaryGuest;
 
   @override
   State<_PairingPage> createState() => _PairingPageState();
@@ -150,8 +156,10 @@ class _PairingPageState extends State<_PairingPage> {
       if (mounted) setState(() => _message = _pairingError(error.message));
     } on Object {
       if (mounted) {
-        setState(() => _message =
-            'ساخت کد انجام نشد. اتصال اینترنت را بررسی کن و دوباره بزن.');
+        setState(
+          () => _message =
+              'ساخت کد انجام نشد. اتصال اینترنت را بررسی کن و دوباره بزن.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -178,8 +186,10 @@ class _PairingPageState extends State<_PairingPage> {
       if (mounted) setState(() => _message = _pairingError(error.message));
     } on Object {
       if (mounted) {
-        setState(() => _message =
-            'اتصال انجام نشد. اینترنت را بررسی کن و دوباره تلاش کن.');
+        setState(
+          () => _message =
+              'اتصال انجام نشد. اینترنت را بررسی کن و دوباره تلاش کن.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -204,7 +214,7 @@ class _PairingPageState extends State<_PairingPage> {
     final invite = widget.invite;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('فضای دونفره'),
+        title: const UslyBrandMark(size: 36),
         actions: [
           IconButton(
             onPressed: widget.onToggleTheme,
@@ -223,27 +233,40 @@ class _PairingPageState extends State<_PairingPage> {
         top: false,
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 40),
+            padding: EdgeInsetsDirectional.fromSTEB(
+              UslySpacing.pagePadding(context),
+              16,
+              UslySpacing.pagePadding(context),
+              40,
+            ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
-                child: widget.state.isPending && _isCreator
-                    ? _PendingPairingCard(
-                        key: const ValueKey('pending'),
-                        invite: invite,
-                        busy: _busy,
-                        onRefresh: _createOrRefresh,
-                      )
-                    : _NewPairingCard(
-                        key: const ValueKey('new'),
-                        nameController: _nameController,
-                        codeController: _codeController,
-                        busy: _busy,
-                        message: _message,
-                        onCreate: _createOrRefresh,
-                        onJoin: _join,
-                      ),
+              child: Column(
+                children: [
+                  if (widget.isTemporaryGuest) ...[
+                    const UslyGuestNotice(),
+                    const SizedBox(height: 14),
+                  ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    child: widget.state.isPending && _isCreator
+                        ? _PendingPairingCard(
+                            key: const ValueKey('pending'),
+                            invite: invite,
+                            busy: _busy,
+                            onRefresh: _createOrRefresh,
+                          )
+                        : _NewPairingCard(
+                            key: const ValueKey('new'),
+                            nameController: _nameController,
+                            codeController: _codeController,
+                            busy: _busy,
+                            message: _message,
+                            onCreate: _createOrRefresh,
+                            onJoin: _join,
+                          ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -272,8 +295,11 @@ class _PendingPairingCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.link_rounded, size: 42),
-            const SizedBox(height: 16),
+            const UslyCompanionScene(
+              height: 132,
+              caption: 'یک کد کوتاه، فقط برای اتصال امن شما دو نفر',
+            ),
+            const SizedBox(height: 12),
             Text(
               'همراهت را دعوت کن',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -301,19 +327,16 @@ class _PendingPairingCard extends StatelessWidget {
                     vertical: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer,
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(22),
                   ),
                   child: SelectableText(
                     invite!.code,
                     textDirection: TextDirection.ltr,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .displaySmall
-                        ?.copyWith(letterSpacing: 4),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displaySmall?.copyWith(letterSpacing: 4),
                   ),
                 ),
               ),
@@ -338,12 +361,23 @@ class _PendingPairingCard extends StatelessWidget {
                 child: const Text('ساخت کد تازه'),
               ),
               const SizedBox(height: 8),
-              const LinearProgressIndicator(),
-              const SizedBox(height: 10),
-              Text(
-                'وقتی همراهت کد را وارد کند، این صفحه خودکار باز می‌شود.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.sync_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'وقتی همراهت کد را وارد کند، این صفحه خودکار باز می‌شود.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -379,6 +413,8 @@ class _NewPairingCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Center(child: UslyCompanionScene(height: 124)),
+            const SizedBox(height: 12),
             Text(
               'دو گوشی، یک قرار',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -470,7 +506,9 @@ class _ConnectionError extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 8),
-              const Text('اطلاعات خصوصی پاک نشده؛ فقط دوباره اتصال را امتحان کن.'),
+              const Text(
+                'اطلاعات خصوصی پاک نشده؛ فقط دوباره اتصال را امتحان کن.',
+              ),
               const SizedBox(height: 18),
               FilledButton.icon(
                 onPressed: onRetry,

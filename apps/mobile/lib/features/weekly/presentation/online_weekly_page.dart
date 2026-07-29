@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:usly/core/theme/usly_theme.dart';
+import 'package:usly/core/widgets/usly_brand.dart';
 import 'package:usly/features/weekly/data/online_weekly_repository.dart';
 import 'package:usly/features/weekly/domain/weekly_models.dart';
 
@@ -12,12 +13,14 @@ class OnlineWeeklyPage extends StatefulWidget {
     required this.client,
     required this.coupleId,
     required this.onToggleTheme,
+    this.isTemporaryGuest = false,
     super.key,
   });
 
   final SupabaseClient client;
   final String coupleId;
   final VoidCallback onToggleTheme;
+  final bool isTemporaryGuest;
 
   @override
   State<OnlineWeeklyPage> createState() => _OnlineWeeklyPageState();
@@ -49,10 +52,7 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
     super.dispose();
   }
 
-  Future<void> _load({
-    bool silent = false,
-    bool force = false,
-  }) async {
+  Future<void> _load({bool silent = false, bool force = false}) async {
     if (_busy && !force) return;
     try {
       final state = await _repository.load(widget.coupleId);
@@ -63,8 +63,10 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
       });
     } on Object {
       if (!mounted || silent) return;
-      setState(() => _error =
-          'همگام‌سازی انجام نشد. پاسخ‌ها پاک نشده‌اند؛ دوباره تلاش کن.');
+      setState(
+        () => _error =
+            'همگام‌سازی انجام نشد. پاسخ‌ها پاک نشده‌اند؛ دوباره تلاش کن.',
+      );
     }
   }
 
@@ -86,8 +88,9 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
       if (mounted) setState(() => _error = _friendlyError(error.message));
     } on Object {
       if (mounted) {
-        setState(() =>
-            _error = 'ثبت امن انجام نشد. اینترنت را بررسی کن و دوباره بزن.');
+        setState(
+          () => _error = 'ثبت امن انجام نشد. اینترنت را بررسی کن و دوباره بزن.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -109,8 +112,9 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
       if (mounted) setState(() => _error = _friendlyError(error.message));
     } on Object {
       if (mounted) {
-        setState(() =>
-            _error = 'رأی ثبت نشد. اینترنت را بررسی کن و دوباره بزن.');
+        setState(
+          () => _error = 'رأی ثبت نشد. اینترنت را بررسی کن و دوباره بزن.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -130,9 +134,10 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
   @override
   Widget build(BuildContext context) {
     final state = _state;
+    final pagePadding = UslySpacing.pagePadding(context);
     return Scaffold(
       appBar: AppBar(
-        title: const _OnlineWordmark(),
+        title: const UslyBrandMark(size: 36),
         actions: [
           IconButton(
             onPressed: widget.onToggleTheme,
@@ -170,16 +175,21 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
               onRefresh: () => _load(),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding:
-                    const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 40),
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  pagePadding,
+                  8,
+                  pagePadding,
+                  40,
+                ),
                 children: [
                   _OnlineHeader(state: state),
                   const SizedBox(height: 22),
+                  if (widget.isTemporaryGuest) ...[
+                    const UslyGuestNotice(),
+                    const SizedBox(height: 14),
+                  ],
                   if (_error != null) ...[
-                    _ErrorBanner(
-                      message: _error!,
-                      onRetry: () => _load(),
-                    ),
+                    _ErrorBanner(message: _error!, onRetry: () => _load()),
                     const SizedBox(height: 14),
                   ],
                   AnimatedSwitcher(
@@ -252,8 +262,7 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
         key: ValueKey('waiting-vote'),
         icon: Icons.how_to_vote_rounded,
         title: 'رأی تو ثبت شد',
-        body:
-            'انتخابت برای همراهت نمایش داده نمی‌شود. منتظر رأی او می‌مانیم.',
+        body: 'انتخابت برای همراهت نمایش داده نمی‌شود. منتظر رأی او می‌مانیم.',
       );
     }
     if (state.noMatch) {
@@ -287,39 +296,6 @@ class _OnlineWeeklyPageState extends State<OnlineWeeklyPage> {
   }
 }
 
-class _OnlineWordmark extends StatelessWidget {
-  const _OnlineWordmark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.secondary,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            Icons.all_inclusive_rounded,
-            color: Theme.of(context).colorScheme.onPrimary,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Text('Usly', style: Theme.of(context).textTheme.titleLarge),
-      ],
-    );
-  }
-}
-
 class _OnlineHeader extends StatelessWidget {
   const _OnlineHeader({required this.state});
 
@@ -333,24 +309,17 @@ class _OnlineHeader extends StatelessWidget {
       children: [
         Row(
           children: [
-            _StatusOrb(
-              active: state?.hasSubmitted == true,
-              label: 'تو',
-            ),
+            _StatusOrb(active: state?.hasSubmitted == true, label: 'تو'),
             Expanded(
               child: Container(
                 height: 2,
                 margin: const EdgeInsets.symmetric(horizontal: 10),
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: .22),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: .22),
               ),
             ),
-            _StatusOrb(
-              active: responseCount == 2,
-              label: 'همراهت',
-            ),
+            _StatusOrb(active: responseCount == 2, label: 'همراهت'),
           ],
         ),
         const SizedBox(height: 20),
@@ -427,19 +396,22 @@ class _OnlineQuestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardPadding = MediaQuery.sizeOf(context).width < 390 ? 18.0 : 22.0;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(22),
+        padding: EdgeInsets.all(cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Chip(
-                  avatar: Icon(Icons.lock_outline_rounded, size: 16),
-                  label: Text('پاسخ خصوصی تو'),
+                const Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: UslyPrivacyBadge(),
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Text(
                   '${questionIndex + 1} / ۵',
                   style: Theme.of(context).textTheme.labelLarge,
@@ -461,9 +433,7 @@ class _OnlineQuestionCard extends StatelessWidget {
                     ? Icons.lock_rounded
                     : Icons.arrow_back_rounded,
               ),
-              label: Text(
-                questionIndex == 4 ? 'ثبت امن پاسخ من' : 'بعدی',
-              ),
+              label: Text(questionIndex == 4 ? 'ثبت امن پاسخ من' : 'بعدی'),
             ),
           ],
         ),
@@ -480,17 +450,19 @@ class _OnlineQuestionCard extends StatelessWidget {
           children: List.generate(5, (index) {
             final value = index + 1;
             return ChoiceChip(
-              label: Text('$value'),
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 26, minHeight: 32),
+                child: Center(child: Text('$value')),
+              ),
               avatar: Icon(
                 value <= 2
                     ? Icons.battery_1_bar_rounded
                     : value == 3
-                        ? Icons.battery_4_bar_rounded
-                        : Icons.battery_full_rounded,
+                    ? Icons.battery_4_bar_rounded
+                    : Icons.battery_full_rounded,
               ),
               selected: draft.energy == value,
-              onSelected: (_) =>
-                  onChanged(draft.copyWith(energy: value)),
+              onSelected: (_) => onChanged(draft.copyWith(energy: value)),
             );
           }),
         );
@@ -499,8 +471,7 @@ class _OnlineQuestionCard extends StatelessWidget {
           values: WeeklyNeed.values,
           selected: draft.need,
           label: _needLabel,
-          onSelected: (value) =>
-              onChanged(draft.copyWith(need: value)),
+          onSelected: (value) => onChanged(draft.copyWith(need: value)),
         );
       case 2:
         return _choiceWrap<DurationBand>(
@@ -511,8 +482,7 @@ class _OnlineQuestionCard extends StatelessWidget {
             DurationBand.medium => 'حدود یک ساعت',
             DurationBand.long => 'بیشتر',
           },
-          onSelected: (value) =>
-              onChanged(draft.copyWith(duration: value)),
+          onSelected: (value) => onChanged(draft.copyWith(duration: value)),
         );
       case 3:
         return _choiceWrap<BudgetBand>(
@@ -523,8 +493,7 @@ class _OnlineQuestionCard extends StatelessWidget {
             BudgetBand.low => 'کم',
             BudgetBand.medium => 'متوسط',
           },
-          onSelected: (value) =>
-              onChanged(draft.copyWith(budget: value)),
+          onSelected: (value) => onChanged(draft.copyWith(budget: value)),
         );
       default:
         return _choiceWrap<SettingBand>(
@@ -535,8 +504,7 @@ class _OnlineQuestionCard extends StatelessWidget {
             SettingBand.outside => 'بیرون',
             SettingBand.either => 'فرقی ندارد',
           },
-          onSelected: (value) =>
-              onChanged(draft.copyWith(setting: value)),
+          onSelected: (value) => onChanged(draft.copyWith(setting: value)),
         );
     }
   }
@@ -552,10 +520,13 @@ class _OnlineQuestionCard extends StatelessWidget {
       runSpacing: 10,
       children: values
           .map(
-            (value) => ChoiceChip(
-              label: Text(label(value)),
-              selected: value == selected,
-              onSelected: (_) => onSelected(value),
+            (value) => ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: ChoiceChip(
+                label: Text(label(value)),
+                selected: value == selected,
+                onSelected: (_) => onSelected(value),
+              ),
             ),
           )
           .toList(),
@@ -563,13 +534,13 @@ class _OnlineQuestionCard extends StatelessWidget {
   }
 
   String _needLabel(WeeklyNeed value) => switch (value) {
-        WeeklyNeed.calm => 'آرامش',
-        WeeklyNeed.fun => 'تفریح',
-        WeeklyNeed.conversation => 'گفت‌وگو',
-        WeeklyNeed.novelty => 'تازگی',
-        WeeklyNeed.support => 'حمایت',
-        WeeklyNeed.play => 'بازی',
-      };
+    WeeklyNeed.calm => 'آرامش',
+    WeeklyNeed.fun => 'تفریح',
+    WeeklyNeed.conversation => 'گفت‌وگو',
+    WeeklyNeed.novelty => 'تازگی',
+    WeeklyNeed.support => 'حمایت',
+    WeeklyNeed.play => 'بازی',
+  };
 }
 
 class _OnlineVotingCard extends StatelessWidget {
@@ -602,7 +573,7 @@ class _OnlineVotingCard extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 14),
             child: Card(
               child: InkWell(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(20),
                 onTap: busy ? null : () => onVote(option.id),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -641,7 +612,34 @@ class _OnlineVotingCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Text(option.reason),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: .08),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 19,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'چرا برای شما؟ ${option.reason}',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -654,10 +652,10 @@ class _OnlineVotingCard extends StatelessWidget {
   }
 
   String _kindLabel(String kind) => switch (kind) {
-        'easy' => 'آسان',
-        'balanced' => 'متعادل',
-        _ => 'متفاوت',
-      };
+    'easy' => 'آسان',
+    'balanced' => 'متعادل',
+    _ => 'متفاوت',
+  };
 }
 
 class _MetaChip extends StatelessWidget {
@@ -671,17 +669,12 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).colorScheme.primary.withValues(alpha: .08),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: .08),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 5),
-          Text(label),
-        ],
+        children: [Icon(icon, size: 16), const SizedBox(width: 5), Text(label)],
       ),
     );
   }
@@ -706,24 +699,37 @@ class _WaitingCard extends StatelessWidget {
         padding: const EdgeInsets.all(26),
         child: Column(
           children: [
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: .94, end: 1),
-              duration: UslyMotion.reveal(context),
-              curve: Curves.easeOutBack,
-              builder: (_, value, child) =>
-                  Transform.scale(scale: value, child: child),
-              child: Icon(icon, size: 48),
+            const UslyCompanionScene(
+              height: 150,
+              caption: 'هرکس در زمان خودش؛ پاسخ تو امن مانده.',
             ),
             const SizedBox(height: 18),
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 24),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               body,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            const SizedBox(height: 20),
-            const LinearProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'این صفحه هر چند ثانیه یک‌بار آرام همگام می‌شود.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
         ),
       ),
@@ -732,44 +738,22 @@ class _WaitingCard extends StatelessWidget {
 }
 
 class _OnlineMatchCard extends StatelessWidget {
-  const _OnlineMatchCard({
-    required this.experience,
-    super.key,
-  });
+  const _OnlineMatchCard({required this.experience, super.key});
 
   final OnlineExperience experience;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(26),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: .7, end: 1),
-                duration: UslyMotion.reveal(context),
-                curve: Curves.elasticOut,
-                builder: (_, value, child) =>
-                    Transform.scale(scale: value, child: child),
-                child: Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colors.primary, colors.secondary],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.favorite_rounded,
-                    color: colors.onPrimary,
-                    size: 38,
-                  ),
-                ),
+            const Center(
+              child: UslyCompanionScene(
+                height: 160,
+                caption: 'دو ریتم، یک قرار مشترک',
               ),
             ),
             const SizedBox(height: 20),
@@ -813,10 +797,7 @@ class _OnlineMatchCard extends StatelessWidget {
 }
 
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({
-    required this.message,
-    required this.onRetry,
-  });
+  const _ErrorBanner({required this.message, required this.onRetry});
 
   final String message;
   final VoidCallback onRetry;
@@ -856,16 +837,14 @@ class _OnlinePrivacySeal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.shield_outlined, size: 20),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            'پاسخ‌ها و رأی‌های خام فقط برای صاحب همان حساب قابل خواندن‌اند؛ همراهت فقط نتیجه مشترک را می‌بیند.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+        const UslyPrivacyBadge(label: 'حریم دونفره روشن است'),
+        const SizedBox(height: 8),
+        Text(
+          'پاسخ‌ها و رأی‌های خام فقط برای صاحب همان حساب قابل خواندن‌اند؛ همراهت فقط نتیجه مشترک را می‌بیند.',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
