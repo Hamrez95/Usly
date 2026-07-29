@@ -1,0 +1,11 @@
+.dart_tool/
+build/
+apps/mobile/.dart_tool/
+apps/mobile/build/
+.superdesign/
+.superdesign/tmp/
+artifacts/
+.env
+*.apk
+*.aab
+*.zip
