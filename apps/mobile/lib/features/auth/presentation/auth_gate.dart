@@ -275,9 +275,10 @@ class _AuthPageState extends State<AuthPage> {
   Future<void> _confirmGuestSignIn() async {
     final accepted = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

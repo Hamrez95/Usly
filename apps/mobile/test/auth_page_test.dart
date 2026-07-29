@@ -22,7 +22,12 @@ void main() {
 
     expect(auth.signUpCalls, 1);
     expect(find.text('فقط تأیید ایمیل مانده'), findsOneWidget);
-    expect(find.textContaining('hamidreza@example.com'), findsOneWidget);
+    expect(
+      find.text(
+        'حساب ساخته شد. لینک فرستاده‌شده به hamidreza@example.com را باز کن و بعد وارد شو.',
+      ),
+      findsOneWidget,
+    );
     expect(find.textContaining('ارسال دوباره تا'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -55,7 +60,7 @@ void main() {
     expect(find.text('ورود مهمان فقط برای تست است'), findsOneWidget);
     expect(auth.anonymousCalls, 0);
 
-    await tester.tap(find.text('متوجه‌ام؛ موقت وارد شو'));
+    await _tapVisible(tester, find.text('متوجه‌ام؛ موقت وارد شو'));
     await tester.pumpAndSettle();
     expect(auth.anonymousCalls, 1);
   });
