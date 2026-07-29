@@ -12,15 +12,13 @@ void main() {
     );
 
     await tester.pumpWidget(_testApp(auth));
-    await tester.tap(find.text('ساخت حساب'));
-    await tester.pump();
+    await _tapVisible(tester, find.text('ساخت حساب'));
     await tester.enterText(
       find.byType(TextField).at(0),
       'hamidreza@example.com',
     );
     await tester.enterText(find.byType(TextField).at(1), 'secure-pass-123');
-    await tester.tap(find.text('حسابم را بساز'));
-    await tester.pump();
+    await _tapVisible(tester, find.text('حسابم را بساز'));
 
     expect(auth.signUpCalls, 1);
     expect(find.text('فقط تأیید ایمیل مانده'), findsOneWidget);
@@ -39,8 +37,7 @@ void main() {
     await tester.pumpWidget(_testApp(auth));
     await tester.enterText(find.byType(TextField).at(0), 'not-an-email');
     await tester.enterText(find.byType(TextField).at(1), 'short');
-    await tester.tap(find.text('وارد فضای دونفره شو'));
-    await tester.pump();
+    await _tapVisible(tester, find.text('وارد فضای دونفره شو'));
 
     expect(auth.signInCalls, 0);
     expect(find.text('یک ایمیل معتبر وارد کن.'), findsOneWidget);
@@ -52,7 +49,7 @@ void main() {
     final auth = _FakeAuthService();
 
     await tester.pumpWidget(_testApp(auth));
-    await tester.tap(find.text('ورود موقت مهمان برای تست'));
+    await _tapVisible(tester, find.text('ورود موقت مهمان برای تست'));
     await tester.pumpAndSettle();
 
     expect(find.text('ورود مهمان فقط برای تست است'), findsOneWidget);
@@ -62,6 +59,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(auth.anonymousCalls, 1);
   });
+}
+
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+  await tester.pump();
 }
 
 Widget _testApp(AuthService auth) {
